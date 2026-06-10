@@ -33,6 +33,7 @@ public class ArmyBeanScatterer : MonoBehaviour
             {
                 // 3. 啪！把豆子精准地砸在地面上
                 GameObject newBean = Instantiate(enemyPrefab, hit.position, Quaternion.identity);
+                successfulSpawns++;
 
                 // 自动寻找挂在同一个空物体上的指挥官脚本
                 SquadCommander commander = GetComponent<SquadCommander>();

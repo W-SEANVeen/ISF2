@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-4882732679378545801
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 7
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: mat_inkwall
+  m_Shader: {fileID: -6465566751694194690, guid: 9aa290f16102c8a408a830f14a89b709,
+    type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2453
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _SampleTexture2D_0c702140aebe4d95aa86b54125d73337_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 18b5e777f2a2d9143be2810d63a1c7e3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_d8318ceafdec4477b50435e55ac82e5d_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 90e274acdf99239439307c90c47abf3e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _patternmask:
+        m_Texture: {fileID: 2800000, guid: 90e274acdf99239439307c90c47abf3e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _QueueControl: 0
+    - _QueueOffset: 3
+    - _snowsickness: 1
+    m_Colors:
+    - _Base_Color: {r: 0.09433931, g: 0.056007314, b: 0.054289594, a: 0.03529412}
+    - _edge_color: {r: 0, g: 0, b: 0, a: 0}
+    - _inkcolor: {r: 0.2924527, g: 0.2573504, b: 0.20140608, a: 1}
+    - _shiny: {r: 1.3362063, g: 1.8534476, b: 2.058189, a: 0}
+    - _snow: {r: 0.64705884, g: 0.64705884, b: 0.64705884, a: 0}
+  m_BuildTextureStacks: []

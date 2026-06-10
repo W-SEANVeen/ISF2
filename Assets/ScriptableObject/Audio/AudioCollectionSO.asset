@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 305eeb3075d355a40837c0aaab81df76, type: 3}
+  m_Name: AudioCollectionSO
+  m_EditorClassIdentifier: 
+  entries:
+  - key: Arrow
+    clip: {fileID: 8300000, guid: bec13296fbb1d0848b9e317fa9020796, type: 3}
+  - key: Arrow_whoosh
+    clip: {fileID: 8300000, guid: a58275fb13cf6c34e9c6659cfe33724a, type: 3}
+  - key: Horn1
+    clip: {fileID: 8300000, guid: 299ce9cdb33b9434eab51cc88e6f74d3, type: 3}
+  - key: Horn2
+    clip: {fileID: 8300000, guid: bbfd4daa679397e4eb65164e64bd8881, type: 3}
+  - key: Drum
+    clip: {fileID: 8300000, guid: 5618867869042af4a8df37f66d9554a9, type: 3}

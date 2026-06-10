@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: mat_house
+  m_Shader: {fileID: -6465566751694194690, guid: 647a50f5d1ab6ad428fb7571e87c31bc,
+    type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _SampleTexture2D_064acc89c7684cf1bd4315c22e799599_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 384631b1b96c9504d93c4241cc47b8d6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _EdgeNoiseStrength: 0.9
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _Snow_Thickness: 0.5
+    m_Colors:
+    - _grass_dark: {r: 0.2924527, g: 0.2110194, b: 0.19037013, a: 0}
+    - _grass_light: {r: 0.65566033, g: 0.5520675, b: 0.41442665, a: 0}
+    - _scale: {r: 0.01, g: 0.01, b: 0, a: 0}
+    - _shiny: {r: 1.3301177, g: 1.8531562, b: 2.0582848, a: 0}
+    - _snow: {r: 0.6462263, g: 0.6462263, b: 0.6462263, a: 0}
+  m_BuildTextureStacks: []
+--- !u!114 &3143857552587394438
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 7

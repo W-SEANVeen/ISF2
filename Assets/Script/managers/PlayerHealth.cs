@@ -1,26 +1,23 @@
 using UnityEngine;
 using System;
 using System.Collections;
-using UnityEngine.UI;
+using System.Collections.Generic;
 
 
 /// <summary>
 /// 玩家受伤与死亡系统。
-/// - 被箭击中 → 屏幕闪红。
+/// - 被箭击中 → 屏幕闪红（Mesh sphere 方式，参考 PXR_ScreenFade）。
 /// - 被死士攻击 → 缴弩 + 拿刀 + 闪红 + 倒地 + 结算场景。
 /// </summary>
 public class PlayerHealth : MonoBehaviour
 {
     public static PlayerHealth Instance;
 
-    [Header("中箭闪红")]
-    [Tooltip("把你的红色半透明图片拖到这里，留空则用纯红色")]
-    public Sprite damageFlashSprite;
+    [Header("闪红参数（Mesh ScreenFade 风格）")]
+    [Tooltip("闪红颜色")]
+    public Color flashColor = new Color(1f, 0f, 0f, 0.6f);
     [Tooltip("闪红持续时间（秒）")]
     public float flashDuration = 0.25f;
-    [Tooltip("闪红最大不透明度")]
-    [Range(0f, 1f)]
-    public float flashMaxAlpha = 0.5f;
 
     [Header("物体")]
     public StickyGrabInteractable crossbowGrab;
@@ -34,8 +31,10 @@ public class PlayerHealth : MonoBehaviour
     [Tooltip("闪红后等待秒数再加载结算")]
     public float delayBeforeGameEnd = 1.5f;
 
-    private Image flashImage;
-    private CanvasGroup flashCanvasGroup;
+    // ---- Mesh 闪红（参考 PXR_ScreenFade） ----
+    private GameObject flashMeshObject;
+    private MeshRenderer flashMeshRenderer;
+    private Material flashMaterial;
     private Coroutine flashCoroutine;
 
     private EnemyAssault enemyAssault;
@@ -47,7 +46,18 @@ public class PlayerHealth : MonoBehaviour
     void Awake()
     {
         if (Instance == null) Instance = this;
-        EnsureDamageFlashCanvas();
+    }
+
+    void Start()
+    {
+        // 在 Start 创建 Mesh（此时 mainCamera 已就绪）
+        EnsureDamageFlashMesh();
+
+        enemyAssault = FindObjectOfType<EnemyAssault>();
+        if (enemyAssault != null)
+            enemyAssault.onPlayerHit.AddListener(OnAssassinHitPlayer);
+        else
+            Debug.LogError("PlayerHealth: 场景中找不到 EnemyAssault！");
     }
 
     void OnEnable()
@@ -60,19 +70,13 @@ public class PlayerHealth : MonoBehaviour
         EnemyAssault.onClimbEnd -= OnAssassinClimbEnd;
     }
 
-    void Start()
-    {
-        enemyAssault = FindObjectOfType<EnemyAssault>();
-        if (enemyAssault != null)
-            enemyAssault.onPlayerHit.AddListener(OnAssassinHitPlayer);
-        else
-            Debug.LogError("PlayerHealth: 场景中找不到 EnemyAssault！");
-    }
-
     void OnDestroy()
     {
         if (enemyAssault != null)
             enemyAssault.onPlayerHit.RemoveListener(OnAssassinHitPlayer);
+
+        if (flashMaterial != null)
+            Destroy(flashMaterial);
     }
 
     // ======================================================================
@@ -107,48 +111,153 @@ public class PlayerHealth : MonoBehaviour
     }
 
     // ======================================================================
-    // 屏幕闪红
+    // 屏幕闪红（Mesh 方式，参考 PXR_ScreenFade）
     // ======================================================================
 
-    void EnsureDamageFlashCanvas()
+    /// <summary>
+    /// 创建包围摄像机的球体 Mesh（面向内法线），使用透明红色材质。
+    /// 和 PXR_ScreenFade 同样的手法：ZTest Always + Alpha Blend，
+    /// 确保在 VR 双目渲染中正确覆盖画面。
+    /// </summary>
+    void EnsureDamageFlashMesh()
     {
-        if (flashImage != null) return;
+        if (flashMeshObject != null) return;
 
-        var canvasObj = new GameObject("DamageFlashCanvas",
-            typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-        DontDestroyOnLoad(canvasObj);
+        if (mainCamera == null)
+            mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            Debug.LogError("PlayerHealth: 找不到 Main Camera，无法创建闪红 Mesh！");
+            return;
+        }
 
-        var canvas = canvasObj.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = short.MaxValue - 1;
+        flashMeshObject = new GameObject("DamageFlashMesh");
+        flashMeshObject.transform.SetParent(mainCamera.transform, false);
 
-        var scaler = canvasObj.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
+        var mf = flashMeshObject.AddComponent<MeshFilter>();
+        flashMeshRenderer = flashMeshObject.AddComponent<MeshRenderer>();
 
-        var overlay = new GameObject("DamageFlashOverlay",
-            typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
-        overlay.transform.SetParent(canvasObj.transform, false);
+        // ---- 构建面向内的球体网格（同 PXR_ScreenFade） ----
+        mf.mesh = CreateInwardSphereMesh();
 
-        var rt = overlay.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
+        // ---- 使用跟 PXR_ScreenFade 同样的 shader（ZTest Always + Alpha Blend） ----
+        Shader shader = Shader.Find("PXR_SDK/PXR_Fade");
+        // 万一 PXR shader 不在构建中，fallback 到 URP Unlit Transparent
+        if (shader == null)
+            shader = Shader.Find("Universal Render Pipeline/Unlit");
 
-        flashImage = overlay.GetComponent<Image>();
-        flashImage.color = Color.red;
-        flashImage.raycastTarget = false;
+        flashMaterial = new Material(shader);
+        flashMaterial.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
+        flashMaterial.renderQueue = 4000;
 
-        flashCanvasGroup = overlay.GetComponent<CanvasGroup>();
-        flashCanvasGroup.alpha = 0f;
-        flashCanvasGroup.blocksRaycasts = false;
+        // URP Unlit 需要手动开启透明度
+        if (shader != null && shader.name.Contains("Unlit"))
+        {
+            flashMaterial.SetFloat("_Surface", 1f);       // Transparent
+            flashMaterial.SetFloat("_Blend", 0f);         // Alpha
+            flashMaterial.SetFloat("_AlphaClip", 0f);
+            flashMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
+            flashMaterial.SetInt("_Cull", 0);             // Off — 保证内部可见
+            flashMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            flashMaterial.EnableKeyword("_ALPHATEST_ON");
+        }
+
+        flashMeshRenderer.material = flashMaterial;
+        flashMeshRenderer.enabled = false;
+    }
+
+    /// <summary>构造向内法线的球体 Mesh（同 PXR_ScreenFade）。</summary>
+    static Mesh CreateInwardSphereMesh()
+    {
+        int N = 5;
+        var verts = new List<Vector3>();
+        var indices = new List<int>();
+
+        // 六面片，归一化到球体
+        for (float i = -N / 2f; i <= N / 2f; i++)
+            for (float j = -N / 2f; j <= N / 2f; j++)
+                verts.Add(new Vector3(i, j, -N / 2f));
+        for (float i = -N / 2f; i <= N / 2f; i++)
+            for (float j = -N / 2f; j <= N / 2f; j++)
+                verts.Add(new Vector3(N / 2f, j, i));
+        for (float i = -N / 2f; i <= N / 2f; i++)
+            for (float j = -N / 2f; j <= N / 2f; j++)
+                verts.Add(new Vector3(i, N / 2f, j));
+        for (float i = -N / 2f; i <= N / 2f; i++)
+            for (float j = -N / 2f; j <= N / 2f; j++)
+                verts.Add(new Vector3(-N / 2f, j, i));
+        for (float i = -N / 2f; i <= N / 2f; i++)
+            for (float j = -N / 2f; j <= N / 2f; j++)
+                verts.Add(new Vector3(i, j, N / 2f));
+        for (float i = -N / 2f; i <= N / 2f; i++)
+            for (float j = -N / 2f; j <= N / 2f; j++)
+                verts.Add(new Vector3(i, -N / 2f, j));
+
+        // 归一化到半径 0.7
+        for (int i = 0; i < verts.Count; i++)
+            verts[i] = verts[i].normalized * 0.7f;
+
+        // 前 4 面三角化
+        for (int num = 0; num < 4; num++)
+        {
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    int idx = j * (N + 1) + (N + 1) * (N + 1) * num + i;
+                    int up = (j + 1) * (N + 1) + (N + 1) * (N + 1) * num + i;
+                    indices.AddRange(new[] { idx, idx + 1, up + 1 });
+                    indices.AddRange(new[] { idx, up + 1, up });
+                }
+            }
+        }
+        // 后 2 面（winding 相反）
+        for (int num = 4; num < 6; num++)
+        {
+            for (int i = 0; i < N + 1; i++)
+            {
+                for (int j = 0; j < N + 1; j++)
+                {
+                    if (i != N && j != N)
+                    {
+                        int idx = j * (N + 1) + (N + 1) * (N + 1) * num + i;
+                        int up = (j + 1) * (N + 1) + (N + 1) * (N + 1) * num + i;
+                        indices.AddRange(new[] { idx, up + 1, idx + 1 });
+                        indices.AddRange(new[] { idx, up, up + 1 });
+                    }
+                }
+            }
+        }
+
+        var mesh = new Mesh();
+        mesh.vertices = verts.ToArray();
+        mesh.triangles = indices.ToArray();
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+        // 法线翻转 → 面向内
+        var normals = mesh.normals;
+        for (int i = 0; i < normals.Length; i++)
+            normals[i] = -normals[i];
+        mesh.normals = normals;
+
+        // 三角形 winding 翻转
+        var tris = mesh.triangles;
+        for (int i = 0; i < tris.Length; i += 3)
+        {
+            (tris[i], tris[i + 2]) = (tris[i + 2], tris[i]);
+        }
+        mesh.triangles = tris;
+
+        return mesh;
     }
 
     public void FlashDamage()
     {
+        if (flashMeshObject == null)
+            EnsureDamageFlashMesh();
+        if (flashMeshObject == null) return;
+
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);
         flashCoroutine = StartCoroutine(FlashRoutine());
@@ -156,20 +265,26 @@ public class PlayerHealth : MonoBehaviour
 
     IEnumerator FlashRoutine()
     {
-        if (damageFlashSprite != null)
-            flashImage.sprite = damageFlashSprite;
+        flashMeshRenderer.enabled = true;
 
-        flashCanvasGroup.alpha = flashMaxAlpha;
-
+        float maxAlpha = flashColor.a;
         float elapsed = 0f;
+
         while (elapsed < flashDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            flashCanvasGroup.alpha = Mathf.Lerp(flashMaxAlpha, 0f, elapsed / flashDuration);
+            float alpha = Mathf.Lerp(maxAlpha, 0f, elapsed / flashDuration);
+            var c = flashMaterial.color;
+            c.a = alpha;
+            flashMaterial.color = c;
             yield return null;
         }
 
-        flashCanvasGroup.alpha = 0f;
+        var final = flashMaterial.color;
+        final.a = 0f;
+        flashMaterial.color = final;
+
+        flashMeshRenderer.enabled = false;
     }
 
     // ======================================================================

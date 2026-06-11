@@ -15,7 +15,6 @@ public class TestArrowShooter : MonoBehaviour
     public float dropHeight = 15f;
 
     private Transform player;
-    private bool isRunning = false;
 
     void Start()
     {
@@ -42,7 +41,6 @@ public class TestArrowShooter : MonoBehaviour
             return;
         }
 
-        isRunning = true;
         InvokeRepeating(nameof(DropArrow), 0f, interval);
         Debug.Log("▶ 测试箭已开始");
     }
@@ -50,7 +48,6 @@ public class TestArrowShooter : MonoBehaviour
     [ContextMenu("⏹ 停止丢箭")]
     public void StopTest()
     {
-        isRunning = false;
         CancelInvoke(nameof(DropArrow));
         Debug.Log("⏹ 测试箭已停止");
     }

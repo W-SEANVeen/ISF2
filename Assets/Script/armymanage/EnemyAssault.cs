@@ -204,13 +204,49 @@ public class EnemyAssault : MonoBehaviour
         // 🚩 不再自动恢复追击 —— 击中后直接进入结算
     }
 
+    [Header("死士攻击验证")]
+    [Tooltip("HitPlayer 时水平距离允许比攻击距离大多少（米），弥补武器挥砍前摇的位移")]
+    public float hitPlayerDistanceBuffer = 0.8f;
+
     /// <summary>
     /// 供攻击动画在刀刃挥出帧调用 —— 触发击中判定。
+    /// 【保底方案】水平距离验证：忽略 Y 轴高度差，防止因玩家相机高度异常导致攻击失效。
     /// </summary>
     public void HitPlayer()
     {
-        Debug.Log("💀 死士命中玩家！");
-        onPlayerHit?.Invoke();
+        // 保底：如果 playerTransform 未赋值或已失效，自动找主相机
+        if (playerTransform == null || !playerTransform.gameObject.activeInHierarchy)
+        {
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                playerTransform = cam.transform;
+                Debug.Log("[EnemyAssault] 自动补获 playerTransform → Camera.main");
+            }
+        }
+
+        if (playerTransform != null)
+        {
+            // 水平距离判断（忽略 Y 轴，只看 XZ 平面）
+            Vector3 from = new Vector3(transform.position.x, 0f, transform.position.z);
+            Vector3 to   = new Vector3(playerTransform.position.x, 0f, playerTransform.position.z);
+            float horizDist = Vector3.Distance(from, to);
+
+            float threshold = attackDistance + hitPlayerDistanceBuffer;
+            if (horizDist <= threshold)
+            {
+                Debug.Log($"💀 死士命中玩家！（水平距离 {horizDist:F2} ≤ {threshold:F2}）");
+                onPlayerHit?.Invoke();
+            }
+            else
+            {
+                Debug.LogWarning($"⚠️ 死士攻击被阻拦：水平距离 {horizDist:F2} > {threshold:F2}，忽略此次攻击");
+            }
+        }
+        else
+        {
+            Debug.LogError("❌ 死士 playerTransform 为空且无法自动找到玩家！");
+        }
     }
 
     /// <summary>

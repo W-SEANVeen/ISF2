@@ -11,19 +11,26 @@ public class BattleDirector : MonoBehaviour
 
     [Header("攻城波次配置")]
     public GameObject[] wave1Prefabs;
-    public GameObject[] laterWavePrefabs;
     public Transform[] spawnPoints;
     public Transform[] targetWalls;
     [Header("骑兵配置")]
     public GameObject horsePrefab;
-    [Tooltip("每批生成几匹马")]
-    public int horsesPerBatch = 3;
     [Tooltip("马在指挥官周围撒开的半径")]
     public float horseScatterRadius = 8f;
     [Tooltip("骑兵冲锋目标——城门，到附近后消失（寓意冲入城内）")]
     public Transform targetGate;
-    [Tooltip("🆕 骑兵生成间隔（秒），持续生成不再按波次")]
+
+    [Header("🐴 骑兵容量与节奏")]
+    [Tooltip("战场上最多同时存在的骑兵数量")]
+    public int maxHorsesOnField = 15;
+    [Tooltip("开局立即生成多少骑兵（一波出）")]
+    public int initialHorseWaveSize = 10;
+    [Tooltip("之后每批补充几匹")]
+    public int horsesPerBatch = 3;
+    [Tooltip("补充间隔（秒）")]
     public float horseSpawnInterval = 8f;
+    [Tooltip("开局后延迟多少秒才开始第一波补充（给初始骑兵冲锋时间）")]
+    public float firstHorseDelay = 12f;
 
     // === 👇 精英死士控制区 👇 ===
     [Header("第二阶段：精英死士单挑")]
@@ -41,12 +48,11 @@ public class BattleDirector : MonoBehaviour
     public int currentActiveEnemies = 0;
 
     [Header("战争节奏控制")]
-    public float waveInterval = 25f;
     public float firstArrowDelay = 5f;
     public float arrowRainInterval = 15f;
 
     private bool isBattleActive = false;
-    private int currentWave = 1;
+    private int currentHorseCount = 0;
 
     void Awake()
     {
@@ -67,75 +73,59 @@ public class BattleDirector : MonoBehaviour
     {
         if (isBattleActive) return;
         isBattleActive = true;
-        StartCoroutine(ArmyChargeRoutine());
+        SpawnFirstWave();
         StartCoroutine(ArrowRainRoutine());
         StartCoroutine(ContinuousHorseRoutine());
 
-        // 🆕 死士不再 StartBattle 时出发，而是等第一波生成后跟随指定指挥官
-        // 避免提前跑到城墙下罚站 (见下方 ArmyChargeRoutine 中 ActivateAndFollow 调用)
         Debug.Log($"🧪 [导演] StartBattle 死士状态: theOneAndOnlyElite={(theOneAndOnlyElite != null ? theOneAndOnlyElite.name : "NULL")} " +
                   $"targetWalls.Length={targetWalls.Length} designatedEliteRouteIndex={designatedEliteRouteIndex}");
 
         Debug.Log("🚩 战斗开始！统帅发布了进攻命令！");
     }
 
-    IEnumerator ArmyChargeRoutine()
+    /// <summary>
+    /// 开局生成一波步兵，每路一个指挥官。
+    /// </summary>
+    void SpawnFirstWave()
     {
-        while (isBattleActive)
+        if (wave1Prefabs == null || wave1Prefabs.Length == 0) return;
+
+        for (int i = 0; i < spawnPoints.Length; i++)
         {
-            if (currentActiveEnemies >= maxEnemiesOnField)
-            {
-                yield return new WaitForSeconds(waveInterval);
-                continue;
-            }
+            GameObject prefabToSpawn = wave1Prefabs[UnityEngine.Random.Range(0, wave1Prefabs.Length)];
+            GameObject newSquad = Instantiate(prefabToSpawn, spawnPoints[i].position, spawnPoints[i].rotation);
 
-            GameObject[] currentPrefabs = (currentWave == 1) ? wave1Prefabs : laterWavePrefabs;
+            SquadCommander commander = newSquad.GetComponent<SquadCommander>();
 
-            for (int i = 0; i < spawnPoints.Length; i++)
+            if (commander != null && targetWalls.Length > i)
             {
-                if (currentPrefabs.Length > 0)
+                commander.ReceiveOrders(targetWalls[i]);
+
+                // 🌟🌟🌟 【核心逻辑】：记录第 i 路生成的梯子是谁
+                if (commander.attachedLadder != null && routeLadders[i] == null)
                 {
-                    GameObject prefabToSpawn = currentPrefabs[UnityEngine.Random.Range(0, currentPrefabs.Length)];
-                    GameObject newSquad = Instantiate(prefabToSpawn, spawnPoints[i].position, spawnPoints[i].rotation);
+                    routeLadders[i] = commander.attachedLadder;
 
-                    SquadCommander commander = newSquad.GetComponent<SquadCommander>();
-
-                    if (commander != null && targetWalls.Length > i)
+                    // 🔥🔥🔥 【死士跟随指定指挥官】
+                    if (i == designatedEliteRouteIndex && theOneAndOnlyElite != null)
                     {
-                        commander.ReceiveOrders(targetWalls[i]);
-
-                        // 🌟🌟🌟 【核心逻辑】：记录第 i 路生成的梯子是谁
-                        // 只记录第一波梯子，避免后续波次覆盖引用
-                        if (commander.attachedLadder != null && routeLadders[i] == null)
-                        {
-                            routeLadders[i] = commander.attachedLadder;
-
-                            // 🔥🔥🔥 【死士跟随指定指挥官】第一波生成时，
-                            // 让死士跟着 designatedEliteRouteIndex 路的指挥官走
-                            if (i == designatedEliteRouteIndex && theOneAndOnlyElite != null)
-                            {
-                                theOneAndOnlyElite.ActivateAndFollow(commander);
-                                // 🆕 双向绑定：让指挥官也知道这个死士，到达城墙时通知它停下
-                                commander.followingElite = theOneAndOnlyElite;
-                                Debug.Log($"💀 死士已激活并跟随指挥官 [{commander.name}]！（第{i}路）");
-                            }
-                        }
-
-                        // 🐴 骑兵已改为持续生成（见 ContinuousHorseRoutine），这里不再按波次配马
+                        theOneAndOnlyElite.ActivateAndFollow(commander);
+                        commander.followingElite = theOneAndOnlyElite;
+                        Debug.Log($"💀 死士已激活并跟随指挥官 [{commander.name}]！（第{i}路）");
                     }
                 }
             }
-            currentWave++;
-            yield return new WaitForSeconds(waveInterval);
         }
+
+        Debug.Log("📯 第一波步兵已出发！");
     }
 
     // 🐴 在指定位置周围撒马，每匹冲向城门
-    void SpawnHorsesAround(Vector3 center)
+    void SpawnHorsesAround(Vector3 center, int count)
     {
         if (horsePrefab == null || targetGate == null) return;
 
-        for (int h = 0; h < horsesPerBatch; h++)
+        for (int h = 0; h < count; h++)
         {
             // 随机偏移
             Vector2 randomPoint = UnityEngine.Random.insideUnitCircle * horseScatterRadius;
@@ -155,31 +145,66 @@ public class BattleDirector : MonoBehaviour
         }
     }
 
+    // 🐴 骑兵登记/注销
+    public void RegisterHorse()
+    {
+        currentHorseCount++;
+        currentActiveEnemies++;
+    }
+    public void UnregisterHorse()
+    {
+        currentHorseCount--;
+        currentActiveEnemies--;
+    }
+
     /// <summary>
-    /// 🆕 骑兵持续生成协程 —— 每隔 horseSpawnInterval 秒在随机出兵点生成一波骑兵，
-    /// 不再依赖按波次生成的指挥官。
+    /// 🐴 骑兵持续生成协程：
+    /// 1. 开局先出一大波 ➜ initialHorseWaveSize 匹
+    /// 2. 之后按 horsesPerBatch 慢慢补充，达到 maxHorsesOnField 上限停止
     /// </summary>
     IEnumerator ContinuousHorseRoutine()
     {
-        float firstHorseDelay = 10f; // 战斗开始后等一会儿再出骑兵
+        // ========== 第一波：开局大量骑兵 ==========
+        if (horsePrefab != null && targetGate != null && spawnPoints.Length > 0)
+        {
+            int toSpawn = Mathf.Min(initialHorseWaveSize, maxHorsesOnField);
+            // 把初始骑兵分散到各个出兵点
+            for (int i = 0; i < toSpawn; i++)
+            {
+                Transform spawnCenter = spawnPoints[i % spawnPoints.Length];
+                SpawnHorsesAround(spawnCenter.position, 1);
+            }
+            Debug.Log($"🐴🐴🐴 开局骑兵潮！初始生成 {toSpawn} 匹，当前场上 {currentHorseCount}/{maxHorsesOnField}");
+        }
+
+        // ========== 第二波起：等一会儿再开始持续补充 ==========
         yield return new WaitForSeconds(firstHorseDelay);
 
         while (isBattleActive)
         {
+            // 达到上限 → 跳过本轮
+            if (currentHorseCount >= maxHorsesOnField)
+            {
+                Debug.Log($"🐴 骑兵已达上限({currentHorseCount}/{maxHorsesOnField})，暂停补充");
+                yield return new WaitForSeconds(horseSpawnInterval);
+                continue;
+            }
+
             if (spawnPoints.Length > 0)
             {
-                // 随机选一个出兵点作为中心来散马
                 Transform spawnCenter = spawnPoints[UnityEngine.Random.Range(0, spawnPoints.Length)];
-                SpawnHorsesAround(spawnCenter.position);
-                Debug.Log($"🐴 持续生成骑兵（{horsesPerBatch}匹）在 [{spawnCenter.name}] 周围");
+                // 不超过上限
+                int batch = Mathf.Min(horsesPerBatch, maxHorsesOnField - currentHorseCount);
+                SpawnHorsesAround(spawnCenter.position, batch);
+                Debug.Log($"🐴 补充骑兵 {batch}匹 在 [{spawnCenter.name}] 周围，场上 {currentHorseCount}/{maxHorsesOnField}");
             }
             else if (targetWalls.Length > 0)
             {
-                // 保底：如果没有 spawnPoints，就在目标城墙附近散马
                 Vector3 midPoint = Vector3.zero;
                 foreach (var wall in targetWalls) midPoint += wall.position;
                 midPoint /= targetWalls.Length;
-                SpawnHorsesAround(midPoint);
+                int batch = Mathf.Min(horsesPerBatch, maxHorsesOnField - currentHorseCount);
+                SpawnHorsesAround(midPoint, batch);
             }
 
             yield return new WaitForSeconds(horseSpawnInterval);

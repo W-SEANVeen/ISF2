@@ -100,12 +100,12 @@ public class EnemyAssault : MonoBehaviour
                     }
 
                     // 🧪 每2秒打一次行军位置
-                    if (Time.time - lastPosLogTime >= POS_LOG_INTERVAL)
-                    {
-                        lastPosLogTime = Time.time;
-                        string target = followCommander != null ? $"指挥官[{followCommander.name}]" : $"城墙({(marchTargetWall != null ? marchTargetWall.position.ToString("F1") : "无")})";
-                        Debug.Log($"🧪 [死士行军] {name} 位置={transform.position:F1} 跟随目标={target} isOnNavMesh={agent.isOnNavMesh} speed={agent.speed}");
-                    }
+                    // if (Time.time - lastPosLogTime >= POS_LOG_INTERVAL)
+                    // {
+                    //     lastPosLogTime = Time.time;
+                    //     string target = followCommander != null ? $"指挥官[{followCommander.name}]" : $"城墙({(marchTargetWall != null ? marchTargetWall.position.ToString("F1") : "无")})";
+                    //     Debug.Log($"🧪 [死士行军] {name} 位置={transform.position:F1} 跟随目标={target} isOnNavMesh={agent.isOnNavMesh} speed={agent.speed}");
+                    // }
                 }
                 break;
 

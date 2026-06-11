@@ -44,16 +44,22 @@ public class EnemyHorse : MonoBehaviour
         // 落地第一件事：找到战场上的旧版压制指挥部，存入脑海
         globalSiegeManager = FindObjectOfType<SiegeManager>();
 
-        // 🌟 【新增核心】：出生登记！向新版波次总导演报到，场上总兵力 +1！
+        // 🌟 【新增核心】：出生登记！向导演报到，骑兵计数 +1
         if (BattleDirector.Instance != null)
         {
-            BattleDirector.Instance.currentActiveEnemies++;
+            BattleDirector.Instance.RegisterHorse();
         }
     }
 
     void Update()
     {
         if (isDead || agent == null) return;
+
+        // 🐴 【新增压制】：每帧从指挥部读取阻尼，实现"大黄弩射中即减速"
+        if (globalSiegeManager != null)
+        {
+            agent.speed = chargeSpeed * globalSiegeManager.globalDamping;
+        }
 
         // 🐴 还没设路线但有目标 → 重试（agent 可能延迟才踩上 NavMesh）
         if (targetDestination != null && agent.isOnNavMesh && !agent.hasPath)
@@ -150,7 +156,7 @@ public class EnemyHorse : MonoBehaviour
         // 加个防错判定，防止游戏直接关闭时，总导演先被销毁而报错
         if (BattleDirector.Instance != null)
         {
-            BattleDirector.Instance.currentActiveEnemies--;
+            BattleDirector.Instance.UnregisterHorse();
         }
     }
 }

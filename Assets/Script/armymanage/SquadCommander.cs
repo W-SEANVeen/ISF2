@@ -25,6 +25,10 @@ public class SquadCommander : MonoBehaviour
     public SiegeLadder attachedLadder; // 在面板里把刚刚那个梯子拖进来
     private bool hasArrived = false;   // 防止重复触发
 
+    [Header("架梯校验参数")]
+    [Tooltip("到达城墙时，实际位置与目标点的最大水平允许偏差（米），超过此值不架梯子")]
+    public float maxLadderHorizontalError = 1.5f;
+
     [Header("梯子与工具人控制")]
     public PorterRetreat portersGroup; // 在这里把搬运工包工头拖进来！
 
@@ -70,23 +74,22 @@ public class SquadCommander : MonoBehaviour
         // （只要跑到这里，说明 hasArrived 肯定是 false，agent 肯定是开着的）
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
-            // === 🧪🧪🧪 诊断日志：到达触发 🧪🧪🧪 ===
-            float realDistToWall = Vector3.Distance(transform.position, targetWall.position);
+            // 🔥 【防中途架梯】水平偏差 + 路径完整性校验
+            float hDist = Vector3.Distance(
+                new Vector3(transform.position.x, 0, transform.position.z),
+                new Vector3(targetWall.position.x, 0, targetWall.position.z)
+            );
             bool pathIsPartial = agent.pathStatus != NavMeshPathStatus.PathComplete;
-            Debug.Log($"🧪 [SquadArrive] {name} remDist={agent.remainingDistance:F2} stopDist={agent.stoppingDistance:F2} pathStatus={agent.pathStatus} realDist2Wall={realDistToWall:F2} pathPartial={pathIsPartial}");
 
-            // 🔥🔥🔥 【修复路中间搭梯子】双重校验：
-            // ① NavMesh 路径必须是完整的（不全则说明被阻挡截断了）
-            // ② 实际距离城墙必须在合理范围内
-            if (pathIsPartial || realDistToWall > agent.stoppingDistance + 3f)
+            float effectiveMaxError = (siegeManager.globalDamping < 0.3f)
+                ? Mathf.Min(maxLadderHorizontalError, 0.8f)
+                : maxLadderHorizontalError;
+
+            if (pathIsPartial || hDist > effectiveMaxError)
             {
-                Debug.Log($"🧪 🛑 [SquadArrive] {name} 拦截！还在半路，重新寻路到城墙 targetWall={targetWall.position}");
-                // 还在半路/路径被挡，重新下令寻路，绝不在路中间架梯子！
                 agent.SetDestination(targetWall.position);
                 return;
             }
-
-            Debug.Log($"🧪 ✅ [SquadArrive] {name} 通过校验，真正到达城墙！架设梯子！");
 
             hasArrived = true; // 立刻上锁！下一帧大门就会被焊死！
 

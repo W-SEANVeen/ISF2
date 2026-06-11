@@ -28,6 +28,10 @@ public class SquadCommander : MonoBehaviour
     [Header("梯子与工具人控制")]
     public PorterRetreat portersGroup; // 在这里把搬运工包工头拖进来！
 
+    [Header("🆕 跟随死士控制")]
+    [Tooltip("跟随本指挥官的精英死士，到达城墙架梯子时会让其原地待命")]
+    public EnemyAssault followingElite;
+
     public void ReceiveOrders(Transform assignedTarget)
     {
         targetWall = assignedTarget; // 接下锦囊里的目标
@@ -66,6 +70,24 @@ public class SquadCommander : MonoBehaviour
         // （只要跑到这里，说明 hasArrived 肯定是 false，agent 肯定是开着的）
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
+            // === 🧪🧪🧪 诊断日志：到达触发 🧪🧪🧪 ===
+            float realDistToWall = Vector3.Distance(transform.position, targetWall.position);
+            bool pathIsPartial = agent.pathStatus != NavMeshPathStatus.PathComplete;
+            Debug.Log($"🧪 [SquadArrive] {name} remDist={agent.remainingDistance:F2} stopDist={agent.stoppingDistance:F2} pathStatus={agent.pathStatus} realDist2Wall={realDistToWall:F2} pathPartial={pathIsPartial}");
+
+            // 🔥🔥🔥 【修复路中间搭梯子】双重校验：
+            // ① NavMesh 路径必须是完整的（不全则说明被阻挡截断了）
+            // ② 实际距离城墙必须在合理范围内
+            if (pathIsPartial || realDistToWall > agent.stoppingDistance + 3f)
+            {
+                Debug.Log($"🧪 🛑 [SquadArrive] {name} 拦截！还在半路，重新寻路到城墙 targetWall={targetWall.position}");
+                // 还在半路/路径被挡，重新下令寻路，绝不在路中间架梯子！
+                agent.SetDestination(targetWall.position);
+                return;
+            }
+
+            Debug.Log($"🧪 ✅ [SquadArrive] {name} 通过校验，真正到达城墙！架设梯子！");
+
             hasArrived = true; // 立刻上锁！下一帧大门就会被焊死！
 
             agent.enabled = false; // 关掉寻路引擎
@@ -83,6 +105,12 @@ public class SquadCommander : MonoBehaviour
                 if (portersGroup != null)
                 {
                     portersGroup.StartRetreat();
+                }
+
+                // 3. 🆕 让跟随的精英死士原地待命，别再往城墙走了
+                if (followingElite != null)
+                {
+                    followingElite.StopAndWait();
                 }
             }
             else

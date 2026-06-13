@@ -47,7 +47,7 @@ Material:
     - _QueueOffset: 0
     - _Snow_Thickness: 0.5
     m_Colors:
-    - _grass_dark: {r: 0.2924527, g: 0.2110194, b: 0.19037013, a: 0}
+    - _grass_dark: {r: 0.212264, g: 0.06107593, b: 0.06696636, a: 0}
     - _grass_light: {r: 0.65566033, g: 0.5520675, b: 0.41442665, a: 0}
     - _scale: {r: 0.01, g: 0.01, b: 0, a: 0}
     - _shiny: {r: 1.3301177, g: 1.8531562, b: 2.0582848, a: 0}

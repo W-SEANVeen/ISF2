@@ -20,7 +20,7 @@ public class EnemyAssault : MonoBehaviour
     /// <summary>攻击到玩家时触发（由 HitPlayer() 方法发射，可在 Animation Event 中调用）</summary>
     public UnityEvent onPlayerHit;
 
-    // 🌟 【新增】：移动速度控制面板
+    //  【新增】：移动速度控制面板
     [Header("移动与攀爬参数")]
     [Tooltip("爬上城墙后追玩家的速度")]
     public float runSpeed = 4f;
@@ -35,14 +35,14 @@ public class EnemyAssault : MonoBehaviour
 
     private Transform myBottomAnchor;
 
-    [Header("🆕 行军配置（开战即出发）")]
+    [Header(" 行军配置（开战即出发）")]
     [Tooltip("死士一开始要行军的目标（城墙位置），由 BattleDirector 在开战时下发")]
     public Transform marchTargetWall;
 
-    // 🔥 要跟随的指挥官——死士跟着他走就不会提前跑到城墙
+    //  要跟随的指挥官——死士跟着他走就不会提前跑到城墙
     private SquadCommander followCommander;
 
-    // 🧪 诊断用：控制打印频率
+    //  诊断用：控制打印频率
     private float lastPosLogTime = -10f;
     private const float POS_LOG_INTERVAL = 2f;
 
@@ -55,11 +55,11 @@ public class EnemyAssault : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
 
-        Debug.Log($"🧪 [死士Start] {name} 初始位置={transform.position} 原始缩放={transform.localScale} 状态={currentState}");
+        Debug.Log($" [死士Start] {name} 初始位置={transform.position} 原始缩放={transform.localScale} 状态={currentState}");
 
         agent.enabled = false;
 
-        // 🌟 绝杀补丁：锁死物理引擎！不准往下掉！
+        //  绝杀补丁：锁死物理引擎！不准往下掉！
         rb.isKinematic = true;
 
         originalScale = transform.localScale;
@@ -67,7 +67,7 @@ public class EnemyAssault : MonoBehaviour
 
         if (weaponTrailController == null)
         {
-            Debug.LogError("❌ 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
+            Debug.LogError(" 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
         }
         else
         {
@@ -85,7 +85,7 @@ public class EnemyAssault : MonoBehaviour
             case EnemyState.MarchingToWall:
                 if (agent.enabled && agent.isOnNavMesh)
                 {
-                    // 🔥 修复：如果有指挥官，就跟着指挥官走（不提前跑去城墙）
+                    //  修复：如果有指挥官，就跟着指挥官走（不提前跑去城墙）
                     if (followCommander != null)
                     {
                         agent.SetDestination(followCommander.transform.position);
@@ -99,12 +99,12 @@ public class EnemyAssault : MonoBehaviour
                         agent.SetDestination(marchTargetWall.position);
                     }
 
-                    // 🧪 每2秒打一次行军位置
+                    //  每2秒打一次行军位置
                     // if (Time.time - lastPosLogTime >= POS_LOG_INTERVAL)
                     // {
                     //     lastPosLogTime = Time.time;
                     //     string target = followCommander != null ? $"指挥官[{followCommander.name}]" : $"城墙({(marchTargetWall != null ? marchTargetWall.position.ToString("F1") : "无")})";
-                    //     Debug.Log($"🧪 [死士行军] {name} 位置={transform.position:F1} 跟随目标={target} isOnNavMesh={agent.isOnNavMesh} speed={agent.speed}");
+                    //     Debug.Log($" [死士行军] {name} 位置={transform.position:F1} 跟随目标={target} isOnNavMesh={agent.isOnNavMesh} speed={agent.speed}");
                     // }
                 }
                 break;
@@ -114,13 +114,13 @@ public class EnemyAssault : MonoBehaviour
                 {
                     agent.SetDestination(myBottomAnchor.position);
 
-                    // 🆕 保底：如果距离梯子底足够近但 OnTriggerEnter 没触发（比如 Collider 没对齐），
+                    //  保底：如果距离梯子底足够近但 OnTriggerEnter 没触发（比如 Collider 没对齐），
                     // 直接强行进入攀爬状态
                     Vector3 flatPos = new Vector3(transform.position.x, 0f, transform.position.z);
                     Vector3 flatAnchor = new Vector3(myBottomAnchor.position.x, 0f, myBottomAnchor.position.z);
                     if (Vector3.Distance(flatPos, flatAnchor) <= agent.stoppingDistance + 0.5f)
                     {
-                        Debug.Log("🧗 [保底] 距离梯子足够近，直接攀爬！");
+                        Debug.Log(" [保底] 距离梯子足够近，直接攀爬！");
                         StartClimbing();
                     }
                 }
@@ -131,10 +131,10 @@ public class EnemyAssault : MonoBehaviour
                 break;
 
             case EnemyState.ChasingPlayer:
-                // 🌟 修复点 2：追逐玩家时也要加这个判断
+                //  修复点 2：追逐玩家时也要加这个判断
                 if (agent.enabled && agent.isOnNavMesh && playerTransform != null)
                 {
-                    // 🔧 将目标压低到地面高度（忽略 Y 轴），避免因相机在头顶导致寻路目标悬空
+                    //  将目标压低到地面高度（忽略 Y 轴），避免因相机在头顶导致寻路目标悬空
                     Vector3 floorTarget = new Vector3(
                         playerTransform.position.x,
                         transform.position.y,
@@ -142,7 +142,7 @@ public class EnemyAssault : MonoBehaviour
                     );
                     agent.SetDestination(floorTarget);
 
-                    // 🔧 水平距离判断（忽略 Y 轴），防止玩家身高/眼高导致永远达不到攻击距离
+                    //  水平距离判断（忽略 Y 轴），防止玩家身高/眼高导致永远达不到攻击距离
                     Vector3 from = new Vector3(transform.position.x, 0f, transform.position.z);
                     Vector3 to   = new Vector3(playerTransform.position.x, 0f, playerTransform.position.z);
                     if (Vector3.Distance(from, to) <= attackDistance)
@@ -162,7 +162,7 @@ public class EnemyAssault : MonoBehaviour
         }
     }
 
-    // 🌟 导演调用的出击指令
+    //  导演调用的出击指令
     /// <summary>
     /// 接收导演指令，激活死士并让其冲向指定梯子。
     /// 如果死士已经在行军状态，则直接切换目标到梯子（不重复启用组件）。
@@ -174,7 +174,7 @@ public class EnemyAssault : MonoBehaviour
         // 把 stoppingDistance 设小，确保踩到 BottomTrigger
         if (currentState == EnemyState.MarchingToWall)
         {
-            // 🆕 已经在行军了（跟着指挥官），保持当前速度直接 redirect 去梯子
+            //  已经在行军了（跟着指挥官），保持当前速度直接 redirect 去梯子
             currentState = EnemyState.RunningToLadder;
             agent.stoppingDistance = 0.1f;
             anim.SetTrigger("Run");
@@ -184,7 +184,7 @@ public class EnemyAssault : MonoBehaviour
                 agent.SetDestination(myBottomAnchor.position);
             }
 
-            Debug.Log("🚀 死士收到梯子信号，转向梯子！");
+            Debug.Log(" 死士收到梯子信号，转向梯子！");
             return;
         }
 
@@ -199,9 +199,9 @@ public class EnemyAssault : MonoBehaviour
         agent.acceleration = 60f;
 
         anim.SetTrigger("Run");
-        Debug.Log("🚀 死士出击，目标锁定梯子！");
+        Debug.Log(" 死士出击，目标锁定梯子！");
 
-        // 🌟 修复点 3：唤醒的瞬间如果他还没踩实网格，就不强行发命令（Update 循环会等他踩实了再发）
+        //  修复点 3：唤醒的瞬间如果他还没踩实网格，就不强行发命令（Update 循环会等他踩实了再发）
         if (agent.isOnNavMesh)
         {
             agent.isStopped = false;
@@ -209,12 +209,12 @@ public class EnemyAssault : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("⚠️ 死士已现身，但双脚暂未接触寻路网格，正在等待物理吸附...");
+            Debug.LogWarning(" 死士已现身，但双脚暂未接触寻路网格，正在等待物理吸附...");
         }
     }
 
     /// <summary>
-    /// 🔥 让死士跟随指定的指挥官行军（而不是自己跑去找城墙）。
+    ///  让死士跟随指定的指挥官行军（而不是自己跑去找城墙）。
     /// 由 BattleDirector 在第一波生成时调用。
     /// </summary>
     public void ActivateAndFollow(SquadCommander commander)
@@ -222,7 +222,7 @@ public class EnemyAssault : MonoBehaviour
         followCommander = commander;
         marchTargetWall = null; // 不自己跑去城墙
 
-        Debug.Log($"🧪 [死士Activate] 跟随指挥官 [{commander.name}] 当前位置={commander.transform.position} 速度={commander.agent.speed}");
+        Debug.Log($" [死士Activate] 跟随指挥官 [{commander.name}] 当前位置={commander.transform.position} 速度={commander.agent.speed}");
 
         // 从隐藏状态现身
         transform.localScale = originalScale;
@@ -233,7 +233,7 @@ public class EnemyAssault : MonoBehaviour
         agent.speed = commander.agent.speed; // 匹配指挥官速度
         agent.acceleration = 60f;
 
-        // 🆕 先在指挥官旁边找位置生成，而不是从远处跑过来
+        //  先在指挥官旁边找位置生成，而不是从远处跑过来
         Vector3 spawnPos = FindSpawnNearCommander(commander);
         if (spawnPos != transform.position)
         {
@@ -245,18 +245,18 @@ public class EnemyAssault : MonoBehaviour
         {
             agent.isStopped = false;
             agent.SetDestination(commander.transform.position);
-            Debug.Log($"🏃 死士在指挥官旁边[{spawnPos:F1}]现身，跟随行军！");
+            Debug.Log($" 死士在指挥官旁边[{spawnPos:F1}]现身，跟随行军！");
         }
         else
         {
-            Debug.LogWarning("⚠️ 死士现身位置周围没有 NavMesh，等待 Update 循环重试...");
+            Debug.LogWarning(" 死士现身位置周围没有 NavMesh，等待 Update 循环重试...");
         }
 
         anim.SetTrigger("Run");
     }
 
     /// <summary>
-    /// 🆕 在指挥官周围半径 3~6 米的随机位置找一个 NavMesh 点作为死士的出生点。
+    ///  在指挥官周围半径 3~6 米的随机位置找一个 NavMesh 点作为死士的出生点。
     /// </summary>
     private Vector3 FindSpawnNearCommander(SquadCommander commander)
     {
@@ -278,19 +278,19 @@ public class EnemyAssault : MonoBehaviour
         }
 
         // 保底：直接放在指挥官位置
-        Debug.LogWarning("⚠️ 死士找不到指挥官周围的 NavMesh 点，直接放在指挥官位置");
+        Debug.LogWarning(" 死士找不到指挥官周围的 NavMesh 点，直接放在指挥官位置");
         return commanderPos;
     }
 
     /// <summary>
-    /// 🆕 指挥官到达城墙开始架梯子时调用 —— 让死士原地待命，
+    ///  指挥官到达城墙开始架梯子时调用 —— 让死士原地待命，
     /// 不再继续往城墙走，等梯子架好后再被 StartAssaultWithTarget 唤醒。
     /// </summary>
     public void StopAndWait()
     {
         if (currentState == EnemyState.MarchingToWall)
         {
-            Debug.Log($"🛑 [死士停止] {name} 收到停止指令，原地待命等待梯子（位置={transform.position:F1}）");
+            Debug.Log($" [死士停止] {name} 收到停止指令，原地待命等待梯子（位置={transform.position:F1}）");
             currentState = EnemyState.Idle;
             if (agent != null && agent.isOnNavMesh)
             {
@@ -300,29 +300,29 @@ public class EnemyAssault : MonoBehaviour
         }
         else
         {
-            Debug.Log($"🧪 [死士停止] {name} 收到停止指令但状态={currentState}，忽略");
+            Debug.Log($" [死士停止] {name} 收到停止指令但状态={currentState}，忽略");
         }
     }
 
     /// <summary>
-    /// 🆕 保底：直接向城墙行军（当没有指挥官可跟随时使用）。
+    ///  保底：直接向城墙行军（当没有指挥官可跟随时使用）。
     /// </summary>
     public void StartMarching(Transform wallTarget)
     {
         marchTargetWall = wallTarget;
         followCommander = null;
 
-        // 🧪 诊断：记录出征时的所有状态
+        //  诊断：记录出征时的所有状态
         NavMeshHit navHit;
         bool onNavMesh = NavMesh.SamplePosition(transform.position, out navHit, 10f, NavMesh.AllAreas);
-        Debug.Log($"🧪 [死士出征] {name} 被调用 StartMarching(保底)! wallTarget={(wallTarget != null ? wallTarget.name + " pos=" + wallTarget.position.ToString() : "NULL")} " +
+        Debug.Log($" [死士出征] {name} 被调用 StartMarching(保底)! wallTarget={(wallTarget != null ? wallTarget.name + " pos=" + wallTarget.position.ToString() : "NULL")} " +
                   $"当前状态={currentState} 当前位置={transform.position} agent启用={agent.enabled} " +
                   $"isOnNavMesh={agent.isOnNavMesh} 附近有NavMesh={onNavMesh} 最近NavMesh点={(onNavMesh ? navHit.position.ToString() : "无")}");
 
         if (!agent.isOnNavMesh && onNavMesh)
         {
             agent.Warp(navHit.position);
-            Debug.Log($"🧪 [死士出征] Warp到最近NavMesh点: {navHit.position}");
+            Debug.Log($" [死士出征] Warp到最近NavMesh点: {navHit.position}");
         }
 
         transform.localScale = originalScale;
@@ -337,20 +337,20 @@ public class EnemyAssault : MonoBehaviour
         {
             agent.isStopped = false;
             agent.SetDestination(marchTargetWall.position);
-            Debug.Log("🏃 死士随大军出征(保底)，目标城墙！");
+            Debug.Log(" 死士随大军出征(保底)，目标城墙！");
         }
         else
         {
-            Debug.LogWarning("⚠️ 死士出征，但暂未踩实 NavMesh，Update 会等踩实再走...");
+            Debug.LogWarning(" 死士出征，但暂未踩实 NavMesh，Update 会等踩实再走...");
         }
     }
 
     /// <summary>
-    /// 🆕 进入攀爬状态 —— 抽出来给 OnTriggerEnter 和保底检测共用
+    ///  进入攀爬状态 —— 抽出来给 OnTriggerEnter 和保底检测共用
     /// </summary>
     void StartClimbing()
     {
-        Debug.Log("🧗 抵达梯子，校准姿态并开爬！");
+        Debug.Log(" 抵达梯子，校准姿态并开爬！");
         currentState = EnemyState.Climbing;
 
         agent.isStopped = true;
@@ -384,7 +384,7 @@ public class EnemyAssault : MonoBehaviour
     /// </summary>
     IEnumerator HandleClimbEnd(Transform topAnchor)
     {
-        Debug.Log("🧗 翻越垛口...");
+        Debug.Log(" 翻越垛口...");
         currentState = EnemyState.ClimbingEnd;
         anim.SetTrigger("ClimbEnd");
 
@@ -404,7 +404,7 @@ public class EnemyAssault : MonoBehaviour
         currentState = EnemyState.ChasingPlayer;
         anim.SetTrigger("Run");
 
-        // 🚩 翻墙完成，通知外部（ForceDrop 弩、拿起刀等）
+        //  翻墙完成，通知外部（ForceDrop 弩、拿起刀等）
         onClimbEnd?.Invoke(this, EventArgs.Empty);
     }
 
@@ -413,12 +413,12 @@ public class EnemyAssault : MonoBehaviour
     /// </summary>
     void StartAttack()
     {
-        Debug.Log("⚔️ 纳命来！");
+        Debug.Log(" 纳命来！");
         currentState = EnemyState.Attacking;
 
         agent.isStopped = true; // 寻路猛踩刹车
         anim.SetTrigger("Attack");
-        // 🚩 不再自动恢复追击 —— 击中后直接进入结算
+        //  不再自动恢复追击 —— 击中后直接进入结算
     }
 
     [Header("死士攻击验证")]
@@ -452,17 +452,17 @@ public class EnemyAssault : MonoBehaviour
             float threshold = attackDistance + hitPlayerDistanceBuffer;
             if (horizDist <= threshold)
             {
-                Debug.Log($"💀 死士命中玩家！（水平距离 {horizDist:F2} ≤ {threshold:F2}）");
+                Debug.Log($" 死士命中玩家！（水平距离 {horizDist:F2} ≤ {threshold:F2}）");
                 onPlayerHit?.Invoke();
             }
             else
             {
-                Debug.LogWarning($"⚠️ 死士攻击被阻拦：水平距离 {horizDist:F2} > {threshold:F2}，忽略此次攻击");
+                Debug.LogWarning($" 死士攻击被阻拦：水平距离 {horizDist:F2} > {threshold:F2}，忽略此次攻击");
             }
         }
         else
         {
-            Debug.LogError("❌ 死士 playerTransform 为空且无法自动找到玩家！");
+            Debug.LogError(" 死士 playerTransform 为空且无法自动找到玩家！");
         }
     }
 
@@ -472,7 +472,7 @@ public class EnemyAssault : MonoBehaviour
     IEnumerator AttackCooldown()
     {
         yield return new WaitForSeconds(3f);
-        Debug.Log("🏃 砍完了，继续追！");
+        Debug.Log(" 砍完了，继续追！");
 
         ResetWeaponTrail();
         currentState = EnemyState.ChasingPlayer;
@@ -487,7 +487,7 @@ public class EnemyAssault : MonoBehaviour
     {
         if (weaponTrailController == null)
         {
-            Debug.LogError("❌ 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
+            Debug.LogError(" 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
             return;
         }
 
@@ -501,7 +501,7 @@ public class EnemyAssault : MonoBehaviour
     {
         if (weaponTrailController == null)
         {
-            Debug.LogError("❌ 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
+            Debug.LogError(" 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
             return;
         }
 
@@ -515,7 +515,7 @@ public class EnemyAssault : MonoBehaviour
     {
         if (weaponTrailController == null)
         {
-            Debug.LogError("❌ 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
+            Debug.LogError(" 致命错误：死士没有绑定武器拖尾控制器！请去 Inspector 把 WeaponTrailController 拖给 EnemyAssault！");
             return;
         }
 

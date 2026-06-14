@@ -30319,7 +30319,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 2.8333335
+        time: 2.8333333
         value: 0.15532842
         inSlope: 0.19523662
         outSlope: 0.19523662
@@ -30328,7 +30328,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 2.8666668
+        time: 2.8666666
         value: 0.14524281
         inSlope: -0.9958085
         outSlope: -0.9958085
@@ -45712,7 +45712,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 1.8000001
+        time: 1.8
         value: -0.41030332
         inSlope: -3.0555496
         outSlope: -3.0555496
@@ -46552,7 +46552,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 2.966667
+        time: 2.9666667
         value: -0.03218205
         inSlope: 1.4938006
         outSlope: 1.4938006
@@ -91471,7 +91471,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 2.8333335
+        time: 2.8333333
         value: 0.15532842
         inSlope: 0.19523662
         outSlope: 0.19523662
@@ -91480,7 +91480,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 2.8666668
+        time: 2.8666666
         value: 0.14524281
         inSlope: -0.9958085
         outSlope: -0.9958085
@@ -106864,7 +106864,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 1.8000001
+        time: 1.8
         value: -0.41030332
         inSlope: -3.0555496
         outSlope: -3.0555496
@@ -107704,7 +107704,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 2.966667
+        time: 2.9666667
         value: -0.03218205
         inSlope: 1.4938006
         outSlope: 1.4938006

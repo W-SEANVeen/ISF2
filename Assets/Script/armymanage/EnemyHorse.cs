@@ -7,6 +7,9 @@ public class EnemyHorse : MonoBehaviour
     public NavMeshAgent agent;
     private bool isDead = false;
 
+    // 🐴 对象池标志：标记当前这匹是否已被“回收”（防止重复归池）
+    private bool isPooled = false;
+
     [Header("行军参数")]
     [Tooltip("马匹的进攻目标位置（通常指向城墙方向）")]
     public Transform targetDestination;
@@ -43,12 +46,6 @@ public class EnemyHorse : MonoBehaviour
 
         // 落地第一件事：找到战场上的旧版压制指挥部，存入脑海
         globalSiegeManager = FindObjectOfType<SiegeManager>();
-
-        // 🌟 【新增核心】：出生登记！向导演报到，骑兵计数 +1
-        if (BattleDirector.Instance != null)
-        {
-            BattleDirector.Instance.RegisterHorse();
-        }
     }
 
     void Update()
@@ -67,13 +64,13 @@ public class EnemyHorse : MonoBehaviour
             agent.SetDestination(targetDestination.position);
         }
 
-        // 🐴 抵达判定：到了就消失
+        // 🐴 抵达判定：到了就消失（归池复用）
         if (targetDestination != null && agent.isOnNavMesh && !agent.pathPending)
         {
             float dist = Vector3.Distance(transform.position, targetDestination.position);
             if (dist <= stoppingDistance)
             {
-                Destroy(gameObject);
+                ReturnToPool();
             }
         }
     }
@@ -144,17 +141,71 @@ public class EnemyHorse : MonoBehaviour
         // === 5. 触发死亡倒地动画 ===
         animator.SetTrigger("Dead");
 
-        // === 6. 2 秒后销毁尸体，回收 Pico 4 性能 ===
-        Destroy(gameObject, 2f);
+        // === 6. 2 秒后归池（复用尸体，不销毁） ===
+        Invoke(nameof(ReturnToPool), 2f);
     }
 
-    // 🌟 【新增核心】：死亡销号！
-    // 无论是被箭射死后过了 2 秒被 Destroy，还是游戏机制把他强制 Destroy
-    // 只要模型一消失，立刻从总导演的账本里注销，腾出兵力名额！
+    // 🐴 从池中取出激活时调用（BattleDirector.GetHorse 后调用）
+    public void OnSpawn()
+    {
+        isDead = false;
+        isPooled = false;
+
+        // 重新启用组件（池中曾被 ResetState 禁用）
+        if (agent != null)
+        {
+            agent.enabled = true;
+            agent.speed = chargeSpeed;
+            agent.acceleration = chargeAcceleration;
+            agent.stoppingDistance = stoppingDistance;
+        }
+
+        MicroMotion micro = GetComponent<MicroMotion>();
+        if (micro != null) micro.enabled = true;
+    }
+
+    /// <summary>
+    /// 🐴 重置马匹状态至初始（准备归池）
+    /// </summary>
+    public void ResetState()
+    {
+        isDead = false;
+        isPooled = true;
+        CancelInvoke(); // 取消任何挂起的 Invoke（比如延迟归池）
+
+        if (agent != null)
+        {
+            agent.enabled = false;
+        }
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = false;
+        }
+
+        if (animator != null)
+        {
+            animator.ResetTrigger("Dead");
+        }
+    }
+
+    /// <summary>
+    /// 🐴 归池（替代 Destroy）
+    /// </summary>
+    void ReturnToPool()
+    {
+        if (isPooled || BattleDirector.Instance == null) return;
+        isPooled = true;
+        BattleDirector.Instance.ReturnHorse(gameObject);
+    }
+
+    // 🌟 安全兜底：万一有其他逻辑外部 Destroy 了这匹马，自动从导演账本注销
     void OnDestroy()
     {
-        // 加个防错判定，防止游戏直接关闭时，总导演先被销毁而报错
-        if (BattleDirector.Instance != null)
+        // 如果已经被池子回收了（active=false，在池里），则不再重复注销
+        // 只有真的被 Destroy 时才需要手动注销
+        if (!isPooled && BattleDirector.Instance != null)
         {
             BattleDirector.Instance.UnregisterHorse();
         }

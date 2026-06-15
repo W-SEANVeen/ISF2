@@ -1,6 +1,6 @@
 using UnityEngine;
+using UnityEngine.Pool;
 using System.Collections;
-using System.Collections.Generic;
 
 public class ArrowRainVolley : MonoBehaviour
 {
@@ -17,9 +17,9 @@ public class ArrowRainVolley : MonoBehaviour
     public float flightTime = 1.8f;
     public float spawnInterval = 0.005f; // 射箭间隔
 
-    // 对象池配置保持不变...
+    // 对象池
     public int poolSize = 250;
-    private Queue<GameObject> arrowPool = new Queue<GameObject>();
+    private IObjectPool<GameObject> arrowPool;
 
     [Header("破空音效")]
     [Tooltip("对应 AudioManager > AudioCollection 里的 key")]
@@ -29,14 +29,26 @@ public class ArrowRainVolley : MonoBehaviour
 
     void Awake()
     {
-        for (int i = 0; i < poolSize; i++)
-        {
-            GameObject arrow = Instantiate(enemyArrowPrefab, transform.position, Quaternion.identity);
-            arrow.SetActive(false);
-            ArrowFlight flightScript = arrow.GetComponent<ArrowFlight>();
-            if (flightScript != null) flightScript.myPool = this;
-            arrowPool.Enqueue(arrow);
-        }
+        arrowPool = new ObjectPool<GameObject>(
+            createFunc: () =>
+            {
+                GameObject arrow = Instantiate(enemyArrowPrefab, transform.position, Quaternion.identity);
+                ArrowFlight flightScript = arrow.GetComponent<ArrowFlight>();
+                if (flightScript != null) flightScript.myPool = this;
+                return arrow;
+            },
+            actionOnGet: arrow => arrow.SetActive(true),
+            actionOnRelease: arrow => arrow.SetActive(false),
+            actionOnDestroy: arrow => Destroy(arrow),
+            collectionCheck: true,
+            defaultCapacity: poolSize,
+            maxSize: poolSize
+        );
+
+        // 预热
+        GameObject[] buffer = new GameObject[poolSize];
+        for (int i = 0; i < poolSize; i++) buffer[i] = arrowPool.Get();
+        for (int i = 0; i < poolSize; i++) arrowPool.Release(buffer[i]);
     }
 
     void Start() { }  // AudioManager 接管音效池，此处留空
@@ -66,7 +78,6 @@ public class ArrowRainVolley : MonoBehaviour
                 GameObject arrow = GetArrowFromPool();
 
                 arrow.transform.position = preciseStartPos;
-                arrow.SetActive(true);
 
                 // 🔊 借一个 AudioSource 挂到箭上 → 自动跟随 → 破空呼啸
                 AttachWhooshToArrow(arrow.transform);
@@ -92,21 +103,12 @@ public class ArrowRainVolley : MonoBehaviour
 
     private GameObject GetArrowFromPool()
     {
-        if (arrowPool.Count == 0)
-        {
-            GameObject arrow = Instantiate(enemyArrowPrefab, transform.position, Quaternion.identity);
-            ArrowFlight flightScript = arrow.GetComponent<ArrowFlight>();
-            if (flightScript != null) flightScript.myPool = this;
-            return arrow;
-        }
-        return arrowPool.Dequeue();
+        return arrowPool.Get();
     }
 
     public void ReturnArrowToPool(GameObject arrow)
     {
-        // 🔊 AudioManager 会自动回收挂上去的音效，此处无需处理
-        arrow.SetActive(false);
-        arrowPool.Enqueue(arrow);
+        arrowPool.Release(arrow);
     }
 
     Vector3? GetPreciseTargetOnWall()

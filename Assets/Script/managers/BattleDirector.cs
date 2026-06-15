@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Pool;
 using System.Collections;
 using System;
 public class BattleDirector : MonoBehaviour
@@ -22,15 +23,19 @@ public class BattleDirector : MonoBehaviour
 
     [Header("🐴 骑兵容量与节奏")]
     [Tooltip("战场上最多同时存在的骑兵数量")]
-    public int maxHorsesOnField = 15;
+    public int maxHorsesOnField = 150;
     [Tooltip("开局立即生成多少骑兵（一波出）")]
-    public int initialHorseWaveSize = 10;
+    public int initialHorseWaveSize = 50;
     [Tooltip("之后每批补充几匹")]
-    public int horsesPerBatch = 3;
+    public int horsesPerBatch = 10;
     [Tooltip("补充间隔（秒）")]
-    public float horseSpawnInterval = 8f;
+    public float horseSpawnInterval = 5f;
     [Tooltip("开局后延迟多少秒才开始第一波补充（给初始骑兵冲锋时间）")]
     public float firstHorseDelay = 12f;
+
+    [Header("🐴 对象池配置")]
+    [Tooltip("池子预热的马匹数量（建议 = maxHorsesOnField，避免运行时 Instantiate）")]
+    public int horsePoolSize = 150;
 
     // === 👇 精英死士控制区 👇 ===
     [Header("第二阶段：精英死士单挑")]
@@ -54,6 +59,9 @@ public class BattleDirector : MonoBehaviour
     private bool isBattleActive = false;
     private int currentHorseCount = 0;
 
+    // 🐴 对象池（Unity 官方 ObjectPool）
+    private IObjectPool<GameObject> horsePool;
+
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -65,7 +73,73 @@ public class BattleDirector : MonoBehaviour
 
     void Start()
     {
+        PrewarmHorsePool();
         Invoke("StartBattle", 3f);
+    }
+
+    /// <summary>
+    /// 🐴 创建并预热马匹对象池
+    /// </summary>
+    void PrewarmHorsePool()
+    {
+        if (horsePrefab == null) return;
+
+        horsePool = new ObjectPool<GameObject>(
+            createFunc: () =>
+            {
+                GameObject h = Instantiate(horsePrefab);
+                h.transform.SetParent(transform);
+                return h;
+            },
+            actionOnGet: OnHorseGet,
+            actionOnRelease: OnHorseRelease,
+            actionOnDestroy: h => Destroy(h),
+            collectionCheck: true,
+            defaultCapacity: horsePoolSize,
+            maxSize: horsePoolSize
+        );
+
+        // 预热：全部取出再放回
+        GameObject[] buffer = new GameObject[horsePoolSize];
+        for (int i = 0; i < horsePoolSize; i++) buffer[i] = horsePool.Get();
+        for (int i = 0; i < horsePoolSize; i++) horsePool.Release(buffer[i]);
+
+        Debug.Log($"🐴 马厩已备好 {horsePoolSize} 匹战马，随时听候调遣！");
+    }
+
+    void OnHorseGet(GameObject horse)
+    {
+        horse.SetActive(true);
+        horse.GetComponent<EnemyHorse>()?.OnSpawn();
+    }
+
+    void OnHorseRelease(GameObject horse)
+    {
+        horse.GetComponent<EnemyHorse>()?.ResetState();
+        horse.SetActive(false);
+        horse.transform.SetParent(transform);
+    }
+
+    /// <summary>
+    /// 🐴 从池中取一匹马
+    /// </summary>
+    GameObject GetHorse()
+    {
+        GameObject horse = horsePool.Get();
+        currentHorseCount++;
+        currentActiveEnemies++;
+        return horse;
+    }
+
+    /// <summary>
+    /// 🐴 马匹归池（替代 Destroy）
+    /// </summary>
+    public void ReturnHorse(GameObject horse)
+    {
+        if (horse == null) return;
+        horsePool.Release(horse);
+        currentHorseCount--;
+        currentActiveEnemies--;
     }
 
     [ContextMenu("📯 吹响进攻号角！")]
@@ -135,7 +209,9 @@ public class BattleDirector : MonoBehaviour
             NavMeshHit hit;
             if (NavMesh.SamplePosition(randomPos, out hit, 5.0f, NavMesh.AllAreas))
             {
-                GameObject horse = Instantiate(horsePrefab, hit.position, Quaternion.identity);
+                GameObject horse = GetHorse();
+                horse.transform.position = hit.position;
+                horse.transform.rotation = Quaternion.identity;
                 EnemyHorse horseScript = horse.GetComponent<EnemyHorse>();
                 if (horseScript != null)
                 {
@@ -145,7 +221,7 @@ public class BattleDirector : MonoBehaviour
         }
     }
 
-    // 🐴 骑兵登记/注销
+    // 🐴 骑兵登记/注销（保留给外部/安全兜底用，池管理已改用 activeHorseCount）
     public void RegisterHorse()
     {
         currentHorseCount++;

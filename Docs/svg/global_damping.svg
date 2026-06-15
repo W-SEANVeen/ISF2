@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 380" font-family="Microsoft YaHei, SimHei, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#CC0000"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="550" height="380" fill="white"/>
+
+  <!-- Player kills enemy -->
+  <rect x="135" y="5" width="280" height="45" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+  <text x="275" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="white">玩家射中 / 击杀敌军</text>
+  <text x="275" y="55" text-anchor="middle" font-size="10" fill="#CC0000">▼ EnemyHealth.Die()</text>
+  <line x1="275" y1="50" x2="275" y2="65" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- globalDamping = 0.1 -->
+  <rect x="125" y="70" width="300" height="45" rx="8" fill="#CC0000" stroke="#990000" stroke-width="2"/>
+  <text x="275" y="97" text-anchor="middle" font-size="16" font-weight="bold" fill="white">globalDamping = 0.1f</text>
+
+  <line x1="275" y1="115" x2="275" y2="130" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- All speed × 0.1 -->
+  <rect x="120" y="135" width="310" height="40" rx="8" fill="#FFF" stroke="#333" stroke-width="1.5"/>
+  <text x="275" y="155" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">全军速度 × 0.1，几乎停滞</text>
+  <text x="275" y="170" text-anchor="middle" font-size="10" fill="#666">约 2 秒深呼吸窗口</text>
+
+  <line x1="275" y1="175" x2="275" y2="190" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Recovery -->
+  <rect x="100" y="195" width="350" height="40" rx="8" fill="#FFF" stroke="#333" stroke-width="1.5"/>
+  <text x="275" y="215" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">阻尼以 0.5/s 缓慢恢复</text>
+  <text x="275" y="230" text-anchor="middle" font-size="10" fill="#666">dampingRecoveryRate × Time.deltaTime</text>
+
+  <line x1="275" y1="235" x2="275" y2="250" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Pressure rises -->
+  <rect x="135" y="255" width="280" height="40" rx="8" fill="#FFF" stroke="#333" stroke-width="1.5"/>
+  <text x="275" y="275" text-anchor="middle" font-size="14" font-weight="bold" fill="#333">压力逐渐回升</text>
+  <text x="275" y="290" text-anchor="middle" font-size="10" fill="#666">推进速度恢复正常</text>
+
+  <!-- Loop back -->
+  <path d="M 55 275 L 15 275 L 15 25 L 135 25" fill="none" stroke="#CC0000" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+  <text x="12" y="155" text-anchor="middle" font-size="10" fill="#999" transform="rotate(-90, 12, 155)">需要再次射杀 → 回到起点</text>
+
+  <!-- Impacted systems -->
+  <rect x="460" y="140" width="80" height="115" rx="5" fill="#FFF8F0" stroke="#ddd" stroke-width="1"/>
+  <text x="500" y="158" text-anchor="middle" font-size="10" font-weight="bold" fill="#CC0000">受影响的系统</text>
+  <text x="500" y="176" text-anchor="middle" font-size="9" fill="#333">▸ 步兵方阵</text>
+  <text x="500" y="193" text-anchor="middle" font-size="9" fill="#333">▸ 骑兵冲锋</text>
+  <text x="500" y="210" text-anchor="middle" font-size="9" fill="#333">▸ 攻城梯进度</text>
+  <text x="500" y="230" text-anchor="middle" font-size="9" fill="#999">一行代码控制</text>
+  <text x="500" y="245" text-anchor="middle" font-size="9" fill="#999">三大系统</text>
+
+  <!-- Code snippet -->
+  <rect x="55" y="310" width="440" height="60" rx="5" fill="#1a1a1a" stroke="#333" stroke-width="1"/>
+  <text x="65" y="328" font-size="10" fill="#8AE8A0" font-family="Consolas, monospace">TriggerSuppressingFire() {</text>
+  <text x="75" y="345" font-size="10" fill="#8AE8A0" font-family="Consolas, monospace">globalDamping = 0.1f;</text>
+  <text x="65" y="362" font-size="10" fill="#8AE8A0" font-family="Consolas, monospace">}</text>
+</svg>

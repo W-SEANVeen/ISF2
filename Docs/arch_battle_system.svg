@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 760" font-family="Microsoft YaHei, SimHei, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 22px; font-weight: bold; fill: #c00; }
+      .subtitle { font-size: 12px; fill: #888; }
+      .node-title { font-size: 14px; font-weight: bold; }
+      .node-desc { font-size: 12px; fill: #555; }
+      .edge { stroke: #bbb; stroke-width: 1.8; fill: none; }
+    </style>
+    <linearGradient id="core-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fce4e4"/>
+      <stop offset="100%" style="stop-color:#f5c8c8"/>
+    </linearGradient>
+    <linearGradient id="mod-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fafafa"/>
+      <stop offset="100%" style="stop-color:#f0f0f0"/>
+    </linearGradient>
+    <linearGradient id="sys-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5f5ff"/>
+      <stop offset="100%" style="stop-color:#e8e8f5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 标题 -->
+  <text x="400" y="36" text-anchor="middle" class="title">系统架构</text>
+  <text x="400" y="54" text-anchor="middle" class="subtitle">《孤城》VR 系统体系</text>
+
+  <!-- ===== BattleDirector ===== -->
+  <rect x="280" y="72" width="240" height="56" rx="10" fill="url(#core-grad)" stroke="#c00" stroke-width="2.5"/>
+  <text x="400" y="96" text-anchor="middle" class="node-title" fill="#c00">BattleDirector（战斗总控）</text>
+  <text x="400" y="116" text-anchor="middle" class="node-desc">单例 Instance · 战斗生命周期</text>
+
+  <!-- ===== 连线：核心 → 第一层 ===== -->
+  <path d="M 400 128 L 400 155" class="edge"/>
+  <line x1="400" y1="155" x2="400" y2="165" class="edge"/>
+  <line x1="100" y1="155" x2="700" y2="155" class="edge"/>
+  <line x1="100" y1="155" x2="100" y2="180" class="edge"/>
+  <line x1="280" y1="155" x2="280" y2="180" class="edge"/>
+  <line x1="520" y1="155" x2="520" y2="180" class="edge"/>
+  <line x1="700" y1="155" x2="700" y2="180" class="edge"/>
+
+  <!-- ===== 第一层模块（4列） ===== -->
+  <!-- SiegeManager -->
+  <rect x="30" y="180" width="140" height="50" rx="8" fill="url(#mod-grad)" stroke="#ccc" stroke-width="1.5"/>
+  <text x="100" y="202" text-anchor="middle" class="node-title">SiegeManager</text>
+  <text x="100" y="220" text-anchor="middle" class="node-desc">全局阻尼 · 攻城进度</text>
+
+  <!-- ArrowRainVolley -->
+  <rect x="210" y="180" width="140" height="50" rx="8" fill="url(#mod-grad)" stroke="#ccc" stroke-width="1.5"/>
+  <text x="280" y="202" text-anchor="middle" class="node-title">ArrowRainVolley</text>
+  <text x="280" y="220" text-anchor="middle" class="node-desc">箭雨生成 · 250 对象池</text>
+
+  <!-- SquadCommander[] -->
+  <rect x="450" y="180" width="140" height="50" rx="8" fill="url(#mod-grad)" stroke="#ccc" stroke-width="1.5"/>
+  <text x="520" y="202" text-anchor="middle" class="node-title">SquadCommander[]</text>
+  <text x="520" y="220" text-anchor="middle" class="node-desc">攻城梯兵 · 寻路调度</text>
+
+  <!-- EnemyHorse -->
+  <rect x="630" y="180" width="140" height="50" rx="8" fill="url(#mod-grad)" stroke="#ccc" stroke-width="1.5"/>
+  <text x="700" y="202" text-anchor="middle" class="node-title">EnemyHorse</text>
+  <text x="700" y="220" text-anchor="middle" class="node-desc">骑兵冲锋</text>
+
+  <!-- ===== 第一层模块展开 ===== -->
+  <!-- SiegeManager 展开 -->
+  <path d="M 100 230 L 100 260" class="edge"/>
+  <rect x="30" y="260" width="140" height="38" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="100" y="280" text-anchor="middle" class="node-desc">globalDamping 控制</text>
+  <text x="100" y="294" text-anchor="middle" class="node-desc">推进进度 siegeProgress</text>
+
+  <!-- ArrowRainVolley 展开 -->
+  <path d="M 280 230 L 280 260" class="edge"/>
+  <rect x="210" y="260" width="140" height="38" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="280" y="280" text-anchor="middle" class="node-desc">抛物线弹道 1.8s</text>
+  <text x="280" y="294" text-anchor="middle" class="node-desc">Queue 对象池</text>
+
+  <!-- SquadCommander 展开 -->
+  <path d="M 520 230 L 520 260" class="edge"/>
+  <rect x="450" y="260" width="140" height="38" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="520" y="280" text-anchor="middle" class="node-desc">抵达城下触发放梯</text>
+  <text x="520" y="294" text-anchor="middle" class="node-desc">寻路调度</text>
+
+  <!-- EnemyHorse 展开 -->
+  <path d="M 700 230 L 700 260" class="edge"/>
+  <rect x="630" y="260" width="140" height="38" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="700" y="280" text-anchor="middle" class="node-desc">冲锋 × globalDamping</text>
+  <text x="700" y="294" text-anchor="middle" class="node-desc">侧翼→城门→销毁</text>
+
+  <!-- ===== 第二层：子模块连线 ===== -->
+  <!-- ArrowRain → ArrowFlight（竖直直连，同列） -->
+  <path d="M 280 298 L 280 420" class="edge"/>
+
+  <!-- EnemyHorse → EnemyHealth（竖直直连，同列） -->
+  <path d="M 700 298 L 700 420" class="edge"/>
+
+  <!-- SquadCommander → SiegeLadder + EnemyAssault（T 字分支） -->
+  <path d="M 520 298 L 520 318" class="edge"/>
+  <line x1="420" y1="318" x2="595" y2="318" class="edge"/>
+  <line x1="420" y1="318" x2="420" y2="345" class="edge"/>
+  <line x1="595" y1="318" x2="595" y2="345" class="edge"/>
+
+  <!-- ===== 子模块（注意：无重叠，文字不溢出） ===== -->
+  <!-- SiegeLadder（归属 SquadCommander，与 EnemyAssault 保持间隔） -->
+  <rect x="355" y="345" width="130" height="44" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="420" y="365" text-anchor="middle" class="node-title">SiegeLadder</text>
+  <text x="420" y="383" text-anchor="middle" class="node-desc">2s Lerp 旋转竖起云梯</text>
+
+  <!-- EnemyAssault（归属 SquadCommander，加宽 200px，独立下排） -->
+  <rect x="495" y="345" width="200" height="70" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="595" y="365" text-anchor="middle" class="node-title">EnemyAssault（精英死士）</text>
+  <text x="595" y="383" text-anchor="middle" class="node-desc">7 状态 FSM</text>
+  <text x="595" y="401" text-anchor="middle" class="node-desc">冲梯 → 攀爬 → 翻墙 → 追击</text>
+
+  <!-- ArrowFlight（归属 ArrowRainVolley） -->
+  <rect x="210" y="420" width="140" height="44" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="280" y="440" text-anchor="middle" class="node-title">ArrowFlight</text>
+  <text x="280" y="458" text-anchor="middle" class="node-desc">单箭物理飞行 · 碰撞回收</text>
+
+  <!-- EnemyHorse.Health（归属 EnemyHorse，同列直连） -->
+  <rect x="630" y="420" width="140" height="44" rx="6" fill="#f9f9f9" stroke="#ddd" stroke-width="1"/>
+  <text x="700" y="440" text-anchor="middle" class="node-title">EnemyHorse.Health</text>
+  <text x="700" y="458" text-anchor="middle" class="node-desc">骑兵受击死亡 · 冲锋压制</text>
+
+  <!-- ===== 支撑系统（4 框均加宽至 480px，避免文字溢出） ===== -->
+  <rect x="130" y="505" width="540" height="46" rx="8" fill="url(#mod-grad)" stroke="#ccc" stroke-width="1.5"/>
+  <text x="400" y="524" text-anchor="middle" class="node-title">全局支撑系统</text>
+  <text x="400" y="541" text-anchor="middle" class="node-desc">AudioManager（音效对象池 · 挂载播放）</text>
+
+  <rect x="130" y="565" width="540" height="46" rx="8" fill="url(#mod-grad)" stroke="#ccc" stroke-width="1.5"/>
+  <text x="400" y="584" text-anchor="middle" class="node-title">玩家系统</text>
+  <text x="400" y="601" text-anchor="middle" class="node-desc">PlayerHealth（受伤闪红 · 中刀僵直 · 结算跳转）</text>
+
+  <rect x="130" y="625" width="540" height="46" rx="8" fill="url(#sys-grad)" stroke="#999" stroke-width="1.5"/>
+  <text x="400" y="644" text-anchor="middle" class="node-title">交互与武器系统</text>
+  <text x="400" y="661" text-anchor="middle" class="node-desc">CrossbowShoot（大黄弩射击） · Knife（近战刀）</text>
+
+  <rect x="130" y="685" width="540" height="46" rx="8" fill="url(#mod-grad)" stroke="#ccc" stroke-width="1.5"/>
+  <text x="400" y="704" text-anchor="middle" class="node-title">场景与 UI 管理</text>
+  <text x="400" y="721" text-anchor="middle" class="node-desc">SceneChanger（场景切换） · MenuUIManager（主菜单） · GameEndUIManager（结算界面）</text>
+</svg>

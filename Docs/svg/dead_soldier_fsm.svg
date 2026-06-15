@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 620" font-family="Microsoft YaHei, SimHei, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#CC0000"/>
+    </marker>
+    <marker id="arrowT" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+    <linearGradient id="stateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#F8F8F8"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="800" height="620" fill="white"/>
+  <text x="400" y="22" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">精英死士 — 7 状态有限状态机（FSM）</text>
+
+  <!-- State 1: Idle -->
+  <rect x="275" y="35" width="250" height="55" rx="8" fill="url(#stateGrad)" stroke="#999" stroke-width="1.5"/>
+  <text x="400" y="57" text-anchor="middle" font-size="14" font-weight="bold" fill="#999">Idle（隐藏状态）</text>
+  <text x="400" y="75" text-anchor="middle" font-size="10" fill="#666">混在步兵中跟随，玩家看不到它</text>
+  <text x="400" y="97" text-anchor="middle" font-size="10" fill="#CC0000">ActivateAndFollow(commander) ← 梯子竖起触发</text>
+  <line x1="400" y1="90" x2="400" y2="108" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- State 2: MarchingToWall -->
+  <rect x="275" y="113" width="250" height="55" rx="8" fill="url(#stateGrad)" stroke="#666" stroke-width="1.5"/>
+  <text x="400" y="135" text-anchor="middle" font-size="14" font-weight="bold" fill="#666">MarchingToWall</text>
+  <text x="400" y="153" text-anchor="middle" font-size="10" fill="#666">跟随指挥官推进，混在人群中</text>
+  <text x="400" y="175" text-anchor="middle" font-size="10" fill="#CC0000">StartAssaultWithTarget(anchor) ← 到达城墙根</text>
+  <line x1="400" y1="168" x2="400" y2="186" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- State 3: RunningToLadder -->
+  <rect x="250" y="191" width="300" height="55" rx="8" fill="url(#stateGrad)" stroke="#CC0000" stroke-width="2"/>
+  <text x="400" y="213" text-anchor="middle" font-size="14" font-weight="bold" fill="#CC0000">RunningToLadder（暴露！）</text>
+  <text x="400" y="231" text-anchor="middle" font-size="10" fill="#666">突然加速脱离人群跑向梯底</text>
+  <text x="400" y="253" text-anchor="middle" font-size="10" fill="#CC0000">OnTriggerEnter(BottomTrigger)</text>
+  <line x1="400" y1="246" x2="400" y2="264" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- State 4: Climbing -->
+  <rect x="275" y="269" width="250" height="55" rx="8" fill="url(#stateGrad)" stroke="#666" stroke-width="1.5"/>
+  <text x="400" y="291" text-anchor="middle" font-size="14" font-weight="bold" fill="#666">Climbing（攀爬云梯）</text>
+  <text x="400" y="309" text-anchor="middle" font-size="10" fill="#666">沿梯子向上，视野中逐渐变大</text>
+  <text x="400" y="331" text-anchor="middle" font-size="10" fill="#CC0000">OnTriggerEnter(TopTrigger)</text>
+  <line x1="400" y1="324" x2="400" y2="342" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- State 5: ClimbingEnd -->
+  <rect x="250" y="347" width="300" height="55" rx="8" fill="url(#stateGrad)" stroke="#666" stroke-width="1.5"/>
+  <text x="400" y="369" text-anchor="middle" font-size="14" font-weight="bold" fill="#666">ClimbingEnd（翻墙 1.5s）</text>
+  <text x="400" y="387" text-anchor="middle" font-size="10" fill="#666">翻过城墙边缘，重新启用 NavMeshAgent</text>
+  <text x="400" y="409" text-anchor="middle" font-size="10" fill="#999">agent.enabled = true</text>
+  <line x1="400" y1="402" x2="400" y2="420" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- State 6: ChasingPlayer -->
+  <rect x="250" y="425" width="300" height="55" rx="8" fill="url(#stateGrad)" stroke="#CC0000" stroke-width="2"/>
+  <text x="400" y="447" text-anchor="middle" font-size="14" font-weight="bold" fill="#CC0000">ChasingPlayer（追逐）</text>
+  <text x="400" y="465" text-anchor="middle" font-size="10" fill="#666">水平距离判定（忽略 Y 轴），距离 ≤ 1.5m</text>
+  <text x="400" y="487" text-anchor="middle" font-size="10" fill="#CC0000">进入攻击范围</text>
+  <line x1="400" y1="480" x2="400" y2="498" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- State 7: Attacking -->
+  <rect x="275" y="503" width="250" height="55" rx="8" fill="#1a1a1a" stroke="#CC0000" stroke-width="2.5"/>
+  <text x="400" y="525" text-anchor="middle" font-size="14" font-weight="bold" fill="white">Attacking（攻击）</text>
+  <text x="400" y="543" text-anchor="middle" font-size="10" fill="#FFAAAA">agent.isStopped → HitPlayer()</text>
+
+  <!-- End -->
+  <line x1="400" y1="558" x2="400" y2="578" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="400" y="600" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">结算场景（游戏结束）</text>
+
+  <!-- Key design points box -->
+  <rect x="550" y="440" width="240" height="145" rx="6" fill="#FFF8F0" stroke="#ddd" stroke-width="1"/>
+  <text x="670" y="460" text-anchor="middle" font-size="11" font-weight="bold" fill="#CC0000">关键设计点</text>
+  <text x="560" y="478" font-size="10" fill="#333">▸ 水平距离判定（忽略Y轴）</text>
+  <text x="560" y="494" font-size="10" fill="#333">    防VR身高差异导致判定失效</text>
+  <text x="560" y="514" font-size="10" fill="#333">▸ Animation Event 同步</text>
+  <text x="560" y="530" font-size="10" fill="#333">    HitPlayer() 在挥刀帧精确调用</text>
+  <text x="560" y="550" font-size="10" fill="#333">▸ 武器拖尾墨迹</text>
+  <text x="560" y="566" font-size="10" fill="#333">    攻击时Trail Renderer开启</text>
+  <text x="560" y="582" font-size="10" fill="#333">▸ 保底触发容错机制</text>
+</svg>

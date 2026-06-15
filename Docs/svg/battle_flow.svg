@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 560" font-family="Microsoft YaHei, SimHei, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#CC0000"/>
+    </marker>
+    <marker id="arrowG" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="850" height="560" fill="white"/>
+
+  <!-- Start: Enter Scene -->
+  <rect x="285" y="10" width="280" height="48" rx="8" fill="#1a1a1a" stroke="#333" stroke-width="2"/>
+  <text x="425" y="40" text-anchor="middle" font-size="16" font-weight="bold" fill="white">进入 Scene2_city_v2</text>
+
+  <text x="425" y="72" text-anchor="middle" font-size="12" fill="#999">3 秒后 — 给玩家环顾环境、拿起弩的时间</text>
+  <line x1="425" y1="58" x2="425" y2="85" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- BattleDirector.StartBattle -->
+  <rect x="250" y="92" width="350" height="48" rx="10" fill="#CC0000" stroke="#990000" stroke-width="2"/>
+  <text x="425" y="122" text-anchor="middle" font-size="17" font-weight="bold" fill="white">BattleDirector.StartBattle()</text>
+
+  <!-- Horizontal branch line -->
+  <line x1="425" y1="140" x2="425" y2="155" stroke="#333" stroke-width="2"/>
+  <line x1="85" y1="155" x2="765" y2="155" stroke="#333" stroke-width="2"/>
+
+  <!-- Branch 1: 敌军冲锋 -->
+  <line x1="85" y1="155" x2="85" y2="178" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="10" y="185" width="155" height="130" rx="8" fill="#FFF" stroke="#333" stroke-width="1.5"/>
+  <rect x="10" y="185" width="155" height="30" rx="8" fill="#333"/>
+  <rect x="10" y="207" width="155" height="8" fill="#333"/>
+  <text x="87" y="205" text-anchor="middle" font-size="13" font-weight="bold" fill="white">⚔ 敌军冲锋</text>
+  <text x="87" y="232" text-anchor="middle" font-size="11" fill="#333">多路步兵方阵</text>
+  <text x="87" y="250" text-anchor="middle" font-size="11" fill="#333">+ 骑兵冲锋 + 攻城梯</text>
+  <text x="87" y="272" text-anchor="middle" font-size="10" fill="#666">从出兵点向城墙推进</text>
+  <text x="87" y="290" text-anchor="middle" font-size="10" fill="#666">开场即启动，持续施压</text>
+  <text x="87" y="310" text-anchor="middle" font-size="10" fill="#999">↓ 抵达城墙架设云梯</text>
+
+  <!-- Branch 2: 箭雨压制 -->
+  <line x1="425" y1="155" x2="425" y2="178" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="345" y="185" width="160" height="130" rx="8" fill="#FFF" stroke="#333" stroke-width="1.5"/>
+  <rect x="345" y="185" width="160" height="30" rx="8" fill="#333"/>
+  <rect x="345" y="207" width="160" height="8" fill="#333"/>
+  <text x="425" y="205" text-anchor="middle" font-size="13" font-weight="bold" fill="white">🏹 箭雨压制</text>
+  <text x="425" y="232" text-anchor="middle" font-size="11" fill="#333">每 15±3 秒 200 支箭</text>
+  <text x="425" y="252" text-anchor="middle" font-size="11" fill="#333">从天空射出</text>
+  <text x="425" y="274" text-anchor="middle" font-size="10" fill="#666">抛物线弹道</text>
+  <text x="425" y="292" text-anchor="middle" font-size="10" fill="#666">飞行时间 1.8s</text>
+  <text x="425" y="310" text-anchor="middle" font-size="10" fill="#999">↓ 逼玩家不断移动</text>
+
+  <!-- Branch 3: 近身搏斗 -->
+  <line x1="765" y1="155" x2="765" y2="178" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="685" y="185" width="160" height="130" rx="8" fill="#FFF" stroke="#CC0000" stroke-width="1.5"/>
+  <rect x="685" y="185" width="160" height="30" rx="8" fill="#CC0000"/>
+  <rect x="685" y="207" width="160" height="8" fill="#CC0000"/>
+  <text x="765" y="205" text-anchor="middle" font-size="13" font-weight="bold" fill="white">⚔ 近身搏斗</text>
+  <text x="765" y="232" text-anchor="middle" font-size="11" fill="#333">精英死士在攻城梯</text>
+  <text x="765" y="250" text-anchor="middle" font-size="11" fill="#333">搭完后冲上城墙</text>
+  <text x="765" y="274" text-anchor="middle" font-size="10" fill="#666">玩家弃弩拿剑厮杀</text>
+  <text x="765" y="292" text-anchor="middle" font-size="10" fill="#CC0000">被命中即结算</text>
+
+  <!-- Merge lines -->
+  <line x1="87" y1="315" x2="87" y2="350" stroke="#666" stroke-width="1.5"/>
+  <line x1="425" y1="315" x2="425" y2="350" stroke="#666" stroke-width="1.5"/>
+  <line x1="765" y1="315" x2="765" y2="350" stroke="#666" stroke-width="1.5"/>
+  <line x1="87" y1="350" x2="765" y2="350" stroke="#666" stroke-width="1.5"/>
+
+  <!-- Continue arrow -->
+  <line x1="425" y1="350" x2="425" y2="375" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Combined battle -->
+  <rect x="175" y="382" width="500" height="55" rx="10" fill="#1a1a1a" stroke="#CC0000" stroke-width="2"/>
+  <text x="425" y="406" text-anchor="middle" font-size="15" font-weight="bold" fill="white">三条线程同时运转</text>
+  <text x="425" y="426" text-anchor="middle" font-size="11" fill="#ccc">多路方阵 + 骑兵冲锋 + 精英死士翻墙 + 箭雨覆盖</text>
+
+  <!-- End condition -->
+  <line x1="425" y1="437" x2="425" y2="465" stroke="#CC0000" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="225" y="472" width="400" height="40" rx="8" fill="#FFF" stroke="#999" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="425" y="497" text-anchor="middle" font-size="13" fill="#666">玩家死亡或被死士击杀 → 跳转结算场景</text>
+</svg>

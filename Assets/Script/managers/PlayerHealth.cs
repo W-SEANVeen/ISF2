@@ -1,13 +1,12 @@
 using UnityEngine;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
-
 /// <summary>
-/// 玩家受伤与死亡系统。
-/// - 被箭击中 → 屏幕闪红（Mesh sphere 方式，参考 PXR_ScreenFade）。
-/// - 被死士攻击 → 闪红 + 倒地 + 结算场景。
+/// 玩家受伤特效与场景结算系统。
+/// - 被箭击中 → 屏幕闪红（Mesh sphere 方式）。
+/// - 被死士攻击 → PlayerCombatController 调用本类 FlashDamage() 闪红。
+/// - 提供 knifeGrab 引用供 PlayerCombatController 在被击中时强制丢弃武器。
 /// </summary>
 public class PlayerHealth : MonoBehaviour
 {
@@ -22,23 +21,11 @@ public class PlayerHealth : MonoBehaviour
     [Header("物体")]
     public StickyGrabInteractable knifeGrab;
 
-    [Header("倒地")]
-    [Tooltip("拖入场景中的 Main Camera")]
-    public Camera mainCamera;
-    [Tooltip("闪红后等待秒数再加载结算")]
-    public float delayBeforeGameEnd = 1.5f;
-
     // ---- Mesh 闪红（参考 PXR_ScreenFade） ----
     private GameObject flashMeshObject;
     private MeshRenderer flashMeshRenderer;
     private Material flashMaterial;
     private Coroutine flashCoroutine;
-
-    private EnemyAssault enemyAssault;
-
-    // ======================================================================
-    // 生命周期
-    // ======================================================================
 
     void Awake()
     {
@@ -47,22 +34,11 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
-        // 在 Start 创建 Mesh（此时 mainCamera 已就绪）
         EnsureDamageFlashMesh();
-
-        enemyAssault = FindObjectOfType<EnemyAssault>();
-        if (enemyAssault != null)
-            enemyAssault.onPlayerHit.AddListener(OnAssassinHitPlayer);
-        else
-            Debug.LogError("PlayerHealth: 场景中找不到 EnemyAssault！");
     }
-
 
     void OnDestroy()
     {
-        if (enemyAssault != null)
-            enemyAssault.onPlayerHit.RemoveListener(OnAssassinHitPlayer);
-
         if (flashMaterial != null)
             Destroy(flashMaterial);
     }
@@ -80,7 +56,6 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    /// <summary>让箭插在玩家身上（停物理 + 挂到玩家骨骼下）。</summary>
     void StickArrowInPlayer(Collider arrowCollider)
     {
         var rb = arrowCollider.GetComponent<Rigidbody>();
@@ -102,35 +77,25 @@ public class PlayerHealth : MonoBehaviour
     // 屏幕闪红（Mesh 方式，参考 PXR_ScreenFade）
     // ======================================================================
 
-    /// <summary>
-    /// 创建包围摄像机的球体 Mesh（面向内法线），使用透明红色材质。
-    /// 和 PXR_ScreenFade 同样的手法：ZTest Always + Alpha Blend，
-    /// 确保在 VR 双目渲染中正确覆盖画面。
-    /// </summary>
     void EnsureDamageFlashMesh()
     {
         if (flashMeshObject != null) return;
 
-        if (mainCamera == null)
-            mainCamera = Camera.main;
-        if (mainCamera == null)
+        var cam = Camera.main;
+        if (cam == null)
         {
             Debug.LogError("PlayerHealth: 找不到 Main Camera，无法创建闪红 Mesh！");
             return;
         }
 
         flashMeshObject = new GameObject("DamageFlashMesh");
-        flashMeshObject.transform.SetParent(mainCamera.transform, false);
+        flashMeshObject.transform.SetParent(cam.transform, false);
 
         var mf = flashMeshObject.AddComponent<MeshFilter>();
         flashMeshRenderer = flashMeshObject.AddComponent<MeshRenderer>();
-
-        // ---- 构建面向内的球体网格（同 PXR_ScreenFade） ----
         mf.mesh = CreateInwardSphereMesh();
 
-        // ---- 使用跟 PXR_ScreenFade 同样的 shader（ZTest Always + Alpha Blend） ----
         Shader shader = Shader.Find("PXR_SDK/PXR_Fade");
-        // 万一 PXR shader 不在构建中，fallback 到 URP Unlit Transparent
         if (shader == null)
             shader = Shader.Find("Universal Render Pipeline/Unlit");
 
@@ -138,14 +103,13 @@ public class PlayerHealth : MonoBehaviour
         flashMaterial.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
         flashMaterial.renderQueue = 4000;
 
-        // URP Unlit 需要手动开启透明度
         if (shader != null && shader.name.Contains("Unlit"))
         {
-            flashMaterial.SetFloat("_Surface", 1f);       // Transparent
-            flashMaterial.SetFloat("_Blend", 0f);         // Alpha
+            flashMaterial.SetFloat("_Surface", 1f);
+            flashMaterial.SetFloat("_Blend", 0f);
             flashMaterial.SetFloat("_AlphaClip", 0f);
             flashMaterial.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);
-            flashMaterial.SetInt("_Cull", 0);             // Off — 保证内部可见
+            flashMaterial.SetInt("_Cull", 0);
             flashMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             flashMaterial.EnableKeyword("_ALPHATEST_ON");
         }
@@ -154,14 +118,12 @@ public class PlayerHealth : MonoBehaviour
         flashMeshRenderer.enabled = false;
     }
 
-    /// <summary>构造向内法线的球体 Mesh（同 PXR_ScreenFade）。</summary>
     static Mesh CreateInwardSphereMesh()
     {
         int N = 5;
         var verts = new List<Vector3>();
         var indices = new List<int>();
 
-        // 六面片，归一化到球体
         for (float i = -N / 2f; i <= N / 2f; i++)
             for (float j = -N / 2f; j <= N / 2f; j++)
                 verts.Add(new Vector3(i, j, -N / 2f));
@@ -181,11 +143,9 @@ public class PlayerHealth : MonoBehaviour
             for (float j = -N / 2f; j <= N / 2f; j++)
                 verts.Add(new Vector3(i, -N / 2f, j));
 
-        // 归一化到半径 0.7
         for (int i = 0; i < verts.Count; i++)
             verts[i] = verts[i].normalized * 0.7f;
 
-        // 前 4 面三角化
         for (int num = 0; num < 4; num++)
         {
             for (int i = 0; i < N; i++)
@@ -199,7 +159,6 @@ public class PlayerHealth : MonoBehaviour
                 }
             }
         }
-        // 后 2 面（winding 相反）
         for (int num = 4; num < 6; num++)
         {
             for (int i = 0; i < N + 1; i++)
@@ -223,13 +182,11 @@ public class PlayerHealth : MonoBehaviour
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
 
-        // 法线翻转 → 面向内
         var normals = mesh.normals;
         for (int i = 0; i < normals.Length; i++)
             normals[i] = -normals[i];
         mesh.normals = normals;
 
-        // 三角形 winding 翻转
         var tris = mesh.triangles;
         for (int i = 0; i < tris.Length; i += 3)
         {
@@ -240,11 +197,18 @@ public class PlayerHealth : MonoBehaviour
         return mesh;
     }
 
+    /// <summary>屏幕闪红（供 PlayerCombatController 和箭矢命中调用）</summary>
     public void FlashDamage()
     {
         if (flashMeshObject == null)
             EnsureDamageFlashMesh();
         if (flashMeshObject == null) return;
+
+        // 确保 renderer 和 alpha 从最高值开始，防止上次未播完
+        flashMeshRenderer.enabled = true;
+        var c = flashMaterial.color;
+        c.a = flashColor.a;
+        flashMaterial.color = c;
 
         if (flashCoroutine != null)
             StopCoroutine(flashCoroutine);
@@ -253,8 +217,6 @@ public class PlayerHealth : MonoBehaviour
 
     IEnumerator FlashRoutine()
     {
-        flashMeshRenderer.enabled = true;
-
         float maxAlpha = flashColor.a;
         float elapsed = 0f;
 
@@ -273,29 +235,5 @@ public class PlayerHealth : MonoBehaviour
         flashMaterial.color = final;
 
         flashMeshRenderer.enabled = false;
-    }
-
-    // ======================================================================
-    // 死士击杀序列
-    // ======================================================================
-
-    /// <summary>死士攻击命中 → 闪红 + 倒地 + 结算</summary>
-    void OnAssassinHitPlayer()
-    {
-        Debug.Log("💀 [PlayerHealth] 死士击中玩家！");
-
-        FlashDamage();
-        knifeGrab?.ForceDrop();
-        StartCoroutine(DelayedGameEnd());
-    }
-
-    IEnumerator DelayedGameEnd()
-    {
-        yield return new WaitForSeconds(delayBeforeGameEnd);
-
-        if (SceneChanger.Instance != null)
-            SceneChanger.Instance.LoadGameEndScene();
-        else
-            Debug.LogError("❌ SceneChanger.Instance 为空，无法加载结算场景！");
     }
 }

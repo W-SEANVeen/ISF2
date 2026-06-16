@@ -268,7 +268,7 @@ public class PlayerCombatController : MonoBehaviour
     // 死亡
     // ============================================================
 
-    /// <summary>玩家死亡：黑屏 + 显示"被打死"结算</summary>
+    /// <summary>玩家死亡：短暂延迟 → 黑屏 + 结算</summary>
     void Die()
     {
         if (isDead) return;
@@ -276,7 +276,12 @@ public class PlayerCombatController : MonoBehaviour
 
         Debug.Log("[PlayerCombat] 玩家血量归零，即将黑屏结算（失败）……");
 
-        // 通知全局战斗管理器 —— 玩家输了
+        StartCoroutine(DelayedLoseCombat());
+    }
+
+    IEnumerator DelayedLoseCombat()
+    {
+        yield return new WaitForSeconds(0.5f); // 被击中后的小硬直
         if (CombatManager.Instance != null)
             CombatManager.Instance.LoseCombat();
     }

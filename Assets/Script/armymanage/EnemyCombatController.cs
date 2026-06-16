@@ -109,6 +109,10 @@ public class EnemyCombatController : MonoBehaviour
     private bool wasLastHitSevere = false;
     private float lastDamageTime = -999f; // 上次受伤时间，防止一刀多判
 
+    // 受击闪红
+    private SkinnedMeshRenderer[] bodyRenderers;
+    private Coroutine flashCoroutine;
+
     // 玩家引用，由 EnemyAssault.BeginCombatPhase 传入
     public Transform playerTransform { get; set; }
 
@@ -123,6 +127,9 @@ public class EnemyCombatController : MonoBehaviour
             anim = GetComponent<Animator>();
 
         enemyAssault = GetComponent<EnemyAssault>();
+
+        // 获取所有身体渲染器（用于受击闪红）
+        bodyRenderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
         currentHP = maxHP;
         // 注意：不在 Start 里攻击！由 EnemyAssault 在战斗开始时调用 BeginCombatPhase
@@ -275,7 +282,7 @@ public class EnemyCombatController : MonoBehaviour
         StartCoroutine(HitBackTimer());
     }
 
-    /// <summary>进入受击倒地状态：播放倒地动画，通知 CombatManager 结算胜利</summary>
+    /// <summary>进入受击倒地状态：播放倒地动画，延迟后通知 CombatManager 结算胜利</summary>
     private void EnterState_KnockedDown()
     {
         Debug.Log($"[死士] → KnockedDown 状态 —— 死亡！");
@@ -285,7 +292,13 @@ public class EnemyCombatController : MonoBehaviour
         SafeResetTrigger("DoStagger");
         anim.SetTrigger("DoKnockedDown");
 
-        // 通知全局战斗管理器 —— 玩家赢了
+        // 延迟结算，让倒地动画播一下
+        StartCoroutine(DelayedWinCombat());
+    }
+
+    IEnumerator DelayedWinCombat()
+    {
+        yield return new WaitForSeconds(1.5f); // 等倒地动画播1.5秒
         if (CombatManager.Instance != null)
             CombatManager.Instance.WinCombat();
     }
@@ -359,6 +372,9 @@ public class EnemyCombatController : MonoBehaviour
         // ★ 防止一刀多判（同一刀碰到多个碰撞体触发多次 OnTriggerEnter）
         if (Time.time - lastDamageTime < 0.3f) { Debug.Log($"[死士] 忽略：冷却中 ({Time.time - lastDamageTime:F2}s < 0.3s)"); return; }
         lastDamageTime = Time.time;
+
+        // 受击闪红
+        StartFlashRed();
 
         // ★ HitBack 中再被砍 → 先扣血再判定，HP>0 就不死，恢复追击
         if (_currentState == EnemyState.HitBack)
@@ -470,6 +486,51 @@ public class EnemyCombatController : MonoBehaviour
     {
         if (weaponTrailController != null)
             weaponTrailController.ResetTrail();
+    }
+
+    /// <summary>受击瞬间把身体染红，然后渐变回原色</summary>
+    void StartFlashRed()
+    {
+        if (bodyRenderers == null || bodyRenderers.Length == 0) return;
+
+        if (flashCoroutine != null)
+            StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashRedRoutine());
+    }
+
+    IEnumerator FlashRedRoutine()
+    {
+        float duration = 0.25f;
+        float elapsed = 0f;
+        Color red = new Color(1f, 0.2f, 0.2f);
+
+        // 瞬间变红
+        foreach (var r in bodyRenderers)
+        {
+            if (r == null || r.material == null) continue;
+            r.material.color = red;
+        }
+
+        // 渐变回白色
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            Color c = Color.Lerp(red, Color.white, t);
+            foreach (var r in bodyRenderers)
+            {
+                if (r == null || r.material == null) continue;
+                r.material.color = c;
+            }
+            yield return null;
+        }
+
+        // 确保回到白色
+        foreach (var r in bodyRenderers)
+        {
+            if (r == null || r.material == null) continue;
+            r.material.color = Color.white;
+        }
     }
 
     /// <summary>安全 Reset Trigger（参数不存在时静默跳过，不报错）</summary>

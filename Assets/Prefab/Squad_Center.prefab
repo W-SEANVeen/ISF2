@@ -307,10 +307,12 @@ MonoBehaviour:
   siegeManager: {fileID: 0}
   agent: {fileID: 5485974740440850157}
   targetWall: {fileID: 0}
-  baseSpeed: 2
+  baseSpeed: 5
   squadMembers: []
   attachedLadder: {fileID: 8813774135815952455}
+  maxLadderHorizontalError: 1.5
   portersGroup: {fileID: 7672399812557692857}
+  followingElite: {fileID: 0}
 --- !u!195 &5485974740440850157
 NavMeshAgent:
   m_ObjectHideFlags: 0

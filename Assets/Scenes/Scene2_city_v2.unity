@@ -4360,8 +4360,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6767377665888628890, guid: ac8a2033533fdcb4e86840ac1f89417a,
         type: 3}
+      propertyPath: field of view
+      value: 79
+      objectReference: {fileID: 0}
+    - target: {fileID: 6767377665888628890, guid: ac8a2033533fdcb4e86840ac1f89417a,
+        type: 3}
       propertyPath: far clip plane
-      value: 1000
+      value: 5000
       objectReference: {fileID: 0}
     - target: {fileID: 7234582487070916319, guid: ac8a2033533fdcb4e86840ac1f89417a,
         type: 3}
@@ -106774,7 +106779,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &910675785
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -137526,7 +137531,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 38.066822, y: 5.164186, z: -111.7398}
-  m_LocalScale: {x: 5000, y: 5000, z: 5000}
+  m_LocalScale: {x: 3000, y: 3000, z: 3000}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

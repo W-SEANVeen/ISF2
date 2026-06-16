@@ -275,7 +275,7 @@ public class EnemyCombatController : MonoBehaviour
         StartCoroutine(HitBackTimer());
     }
 
-    /// <summary>进入受击倒地状态：播放倒地动画，通知 CombatManager 结算胜利</summary>
+    /// <summary>进入受击倒地状态：播放倒地动画，延迟2秒后通知 CombatManager 结算胜利</summary>
     private void EnterState_KnockedDown()
     {
         Debug.Log($"[死士] → KnockedDown 状态 —— 死亡！");
@@ -285,9 +285,17 @@ public class EnemyCombatController : MonoBehaviour
         SafeResetTrigger("DoStagger");
         anim.SetTrigger("DoKnockedDown");
 
-        // 通知全局战斗管理器 —— 玩家赢了
+        // 等倒地动画播一会儿再结算
+        StartCoroutine(DelayedWin());
+    }
+
+    IEnumerator DelayedWin()
+    {
+        yield return new WaitForSeconds(2f);
         if (CombatManager.Instance != null)
             CombatManager.Instance.WinCombat();
+        else
+            Debug.LogError("[死士] CombatManager.Instance 为空！");
     }
 
     // ============================================================

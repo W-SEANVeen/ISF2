@@ -268,17 +268,24 @@ public class PlayerCombatController : MonoBehaviour
     // 死亡
     // ============================================================
 
-    /// <summary>玩家死亡：黑屏 + 显示"被打死"结算</summary>
+    /// <summary>玩家死亡：延迟 gameOverDelay 秒后黑屏 + 显示"被打死"结算</summary>
     void Die()
     {
         if (isDead) return;
         isDead = true;
 
-        Debug.Log("[PlayerCombat] 玩家血量归零，即将黑屏结算（失败）……");
+        Debug.Log($"[PlayerCombat] 玩家血量归零，{gameOverDelay}s 后黑屏结算（失败）……");
 
-        // 通知全局战斗管理器 —— 玩家输了
+        StartCoroutine(DelayedLose());
+    }
+
+    IEnumerator DelayedLose()
+    {
+        yield return new WaitForSeconds(gameOverDelay);
         if (CombatManager.Instance != null)
             CombatManager.Instance.LoseCombat();
+        else
+            Debug.LogError("[PlayerCombat] CombatManager.Instance 为空！");
     }
 
     // ============================================================

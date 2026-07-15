@@ -29,7 +29,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Density: 0.67
+    - _Density: 0.75
     m_Colors:
     - _CloudColor: {r: 0.041666664, g: 0.041666664, b: 0.041666664, a: 1}
     - _ScrollSpeed: {r: 0.005, g: 0, b: 0, a: 0}
